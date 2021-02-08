@@ -2,38 +2,47 @@ module PreprocessData
 
 using DataDeps, DataFrames, CSV, Random
 
+function call_dataset(name::String)
+    registering_dataset(name)
+    @datadep_str name
+end
+
+#priklad => hodnoty (website, checksum, param pro preprocess) pro dataset iris
 function registering_dataset(
     name::String,
-    remote_path::String
 )
+    remote_path = "http://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data"
     register(DataDep(
         name,
         """
             Dataset: $name
             Website: $remote_path
         """,
-        remote_path
+        remote_path,
+        "6f608b71a7317216319b4d27b4d9bc84e6abd734eda7872b71a458569e2656c0",
+        post_fetch_method = (path -> begin
+            PreprocessData.preprocess(path,name,
+                target_col = 5,
+            )
+        end)
     ))
 end
 
-#nacte data z datadeps, vrati df, kde posledni sloupec je target
-#header_name vector s nazvy sloupcu, =0 vygeneruji se 
-#pred nazev target sloupce pripoji "Targ"
-#pred sloupce s kateg. daty pripoji "Categ"
+
 function preprocess(
+    path::String,
     name::String;
     header_names::Union{Vector{String}, Vector{Symbol}, Int} = 0,
     target_col::Int = 0,
     categorical_cols::Union{Int, UnitRange{Int}} = 1:0, 
     kwargs...
 )
-    path = @datadep_str name
     df = CSV.File(
-        joinpath(path, readdir(path)[1]),           #data = jediny soubor ve slozce @datadep_str name, urcite existuje nejaky lepsi zpusob ziskani cesty vcetne jmena souboru
-        header=header_names,
-        missingstrings=["", "NA", "?", "*", "#DIV/0!"],
-        truestrings=["T", "t", "TRUE", "true", "y", "yes"],
-        falsestrings=["F", "f", "FALSE", "false", "n", "no"],
+        path, 
+        header = header_names,
+        missingstrings = ["", "NA", "?", "*", "#DIV/0!"],
+        truestrings = ["T", "t", "TRUE", "true", "y", "yes"],
+        falsestrings = ["F", "f", "FALSE", "false", "n", "no"],
         kwargs...
         ) |> DataFrame   
         
@@ -50,20 +59,31 @@ function preprocess(
         df = df[!,1:end .!=target_col]
     end
     if target_col == last_col_index
-        rename!(df, last_col_index => "Targ-"*names(df)[target_col])
+        rename!(df, last_col_index => "Target")
     end
-    df
+    
+    path_for_save = joinpath(dirname(path), "data-"*name*".csv")
+    println(path_for_save)
+    CSV.write(path_for_save, df, delim=',', writeheader=true)
+
 end
 
 #train-test split
 function split_traintest(
-    df::DataFrame;
+    path::String;
     train_size::Float64 = 0.8,
     random_seed::Int = 12345,
     return_df::Bool = true              #true - vrati x jako DataFrame,false - jako Array
 )
+    df = CSV.File(
+        path, header=true,
+        missingstrings=["", "NA", "?", "*", "#DIV/0!"],
+        truestrings=["T", "t", "TRUE", "true", "y", "yes"],
+        falsestrings=["F", "f", "FALSE", "false", "n", "no"],
+        ) |> DataFrame  
+
     if(return_df)
-        x = df[:,1:end-1]               #hodnoty
+        x = df[:,1:end-1]               #hodnoty bez sloupce target
     else
         x = Array(df[:,1:end-1])
     end
@@ -85,12 +105,18 @@ end
 
 #train-validate-test split
 function split_trainvalidtest(
-    df::DataFrame;
+    path::String;
     train_size::Float64 = 0.8,
     valid_size::Float64 = 0.2,
     random_seed::Int = 12345,
     return_df::Bool = true              #true - vrati x jako DataFrame,false - jako Array
 )
+    df = CSV.File(
+        path, header=true,
+        missingstrings=["", "NA", "?", "*", "#DIV/0!"],
+        truestrings=["T", "t", "TRUE", "true", "y", "yes"],
+        falsestrings=["F", "f", "FALSE", "false", "n", "no"],
+        ) |> DataFrame  
     if(return_df)
         x = df[:,1:end-1]               #hodnoty
     else
