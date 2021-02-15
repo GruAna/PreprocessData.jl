@@ -1,5 +1,6 @@
 abstract type DatasetName end
 name(dn::DatasetName) = lowercasefirst(String(nameof(typeof(dn))))
+
 """
     dict = Dict{String, DatasetName}()
 
@@ -13,7 +14,7 @@ function preprocess(dn::DatasetName) end
 """
     function call_dataset(dataset)
 
-Call script based on the provided argument `dataset` dataset.jl, which is located in 
+Call script based on the provided argument `dataset` dataset.jl, which is located in
 ./src/data subfolder. Registrate dataset using `DataDeps` package.
 Download the dataset and create a csv file, see [`preprocess?`](@ref)).
 """
@@ -36,7 +37,7 @@ end
 """
     registering_dataset(dsName::DatasetName)
 
-Create a registration block for DataDeps package. 
+Create a registration block for DataDeps package.
 """
 function registering_dataset(dsName::DatasetName)
     register(DataDep(
@@ -60,7 +61,7 @@ The format can be described as - columns represents attributes, rows instances,
 attributes in a row are separated by comma. First row of file is header, name of columns
 can be passed in `header_names`, if not names `Column 1` are created.
 Last column contains target values and is named Target, if `target_col` is provided
-and has value within bounds. `categorical_cols` if provided prepend "Categ-" 
+and has value within bounds. `categorical_cols` if provided prepend "Categ-"
 at the beginning of column name.
 """
 function preprocess(
@@ -68,19 +69,19 @@ function preprocess(
     name::String;
     header_names::Union{Vector{String}, Vector{Symbol}, Int} = 0,
     target_col::Int = 0,
-    categorical_cols::Union{Int, UnitRange{Int}, Array{Int,1}} = 1:0, 
+    categorical_cols::Union{Int, UnitRange{Int}, Array{Int,1}} = 1:0,
     kwargs...
 )
     df = CSV.File(
-        path, 
+        path,
         header = header_names,
         missingstrings = ["", "NA", "?", "*", "#DIV/0!"],
         truestrings = ["T", "t", "TRUE", "true", "y", "yes"],
         falsestrings = ["F", "f", "FALSE", "false", "n", "no"],
         kwargs...
-        ) |> DataFrame   
-        
-        
+        ) |> DataFrame
+
+
     last_col_index = ncol(df)
 
     for i in categorical_cols
@@ -95,7 +96,7 @@ function preprocess(
     if target_col == last_col_index
         rename!(df, last_col_index => "Target")
     end
-    
+
     path_for_save = joinpath(dirname(path), "data-"*name*".csv")
     println(path_for_save)
     CSV.write(path_for_save, df, delim=',', writeheader=true)
