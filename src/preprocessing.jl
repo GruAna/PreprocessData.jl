@@ -1,46 +1,22 @@
 abstract type DatasetName end
 name(dn::DatasetName) = lowercasefirst(String(nameof(typeof(dn))))
+function preprocess(::DatasetName) end
 
 """
-    dict = Dict{String, DatasetName}()
+    function call(dataset)
 
-Dictionary storing name of dataset as key (e.g. `"iris"`) and
-struct with the same name as value (e.g. `Iris()`)
+Download the dataset using `DataDeps` package
+and create a csv file, see [`preprocess?`](@ref)).
 """
-dict = Dict{String, DatasetName}()
-DsName(dn::DatasetName) = push!(dict, name(dn) => dn)
-function preprocess(dn::DatasetName) end
+call(dataset) = @datadep_str dataset
 
 """
-    function call_dataset(dataset)
-
-Call script based on the provided argument `dataset` dataset.jl, which is located in
-./src/data subfolder. Registrate dataset using `DataDeps` package.
-Download the dataset and create a csv file, see [`preprocess?`](@ref)).
-"""
-function call_dataset(dataset)
-    pathToDsScript = joinpath(datasets_dir, "$dataset.jl")
-    if !isfile(pathToDsScript)
-        @error """No dataset $dataset found. Check for mistakes or create $dataset.jl"""
-        throw(DatasetNotFoundErr("No dataset $dataset.jl found."))
-    end
-    include(pathToDsScript)
-    dsName = get(dict, dataset, false)
-    if dsName == false
-        @error """Dataset $dataset not registered in dictionary dict"""
-    end
-    registering_dataset(dsName)
-    @datadep_str dataset
-end
-
-
-"""
-    registering_dataset(dsName::DatasetName)
+    registering(dsName::DatasetName)
 
 Create a registration block for DataDeps package.
 """
-function registering_dataset(dsName::DatasetName)
-    register(DataDep(
+function registering(dsName::DatasetName)
+    DataDeps.register(DataDep(
         name(dsName),
         """
             Dataset: $(name(dsName))
@@ -67,9 +43,9 @@ at the beginning of column name.
 function preprocess(
     path::String,
     name::String;
-    header_names::Union{Vector{String}, Vector{Symbol}, Int} = 0,
-    target_col::Int = 0,
-    categorical_cols::Union{Int, UnitRange{Int}, Array{Int,1}} = 1:0,
+    header_names::Union{Vector{String}, Vector{Symbol}, Int}=0,
+    target_col::Int=0,
+    categorical_cols::Union{Int, UnitRange{Int}, Array{Int,1}}=1:0,
     kwargs...
 )
     df = CSV.File(
@@ -81,18 +57,18 @@ function preprocess(
         kwargs...
         ) |> DataFrame
 
-
     last_col_index = ncol(df)
 
     for i in categorical_cols
         rename!(df, i => "Categ-"*names(df)[i])
     end
 
-    #move target column to last position if not there already
+    #Move target column to last position if not there already.
     if target_col > 0 && target_col < last_col_index
-        df.target = df[!,target_col]
-        df = df[!,1:end .!=target_col]
+        df.target = df[!, target_col]
+        df = df[!, 1:end .!= target_col]
     end
+
     if target_col == last_col_index
         rename!(df, last_col_index => "Target")
     end
@@ -100,5 +76,4 @@ function preprocess(
     path_for_save = joinpath(dirname(path), "data-"*name*".csv")
     println(path_for_save)
     CSV.write(path_for_save, df, delim=',', writeheader=true)
-
 end

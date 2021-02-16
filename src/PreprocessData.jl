@@ -1,20 +1,21 @@
 module PreprocessData
 
-using DataDeps, DataFrames, CSV, Random, InteractiveUtils
+using DataDeps, DataFrames, CSV, InteractiveUtils, Random
 
-export call_dataset
+export call
+export split_traintest, split_trainvalidtest
 
-const datasets_dir = joinpath(@__DIR__, "datasets")
+const DATASET_DIR = joinpath(@__DIR__, "datasets")
 
-include("errors.jl")
+include("utils.jl")
 include("split.jl")
 include("preprocessing.jl")
 
-include.(readdir(datasets_dir; join = true))
+include.(readdir(DATASET_DIR; join = true))
 
 function __init__()
     for T in InteractiveUtils.subtypes(DatasetName)
-        registering_dataset(T())
+        registering(T())
     end
 end
 end # module
