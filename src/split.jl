@@ -4,45 +4,31 @@
 Split dataset from file to train and test data.
 
 # Arguments
-- `dataset::String`: name of the datset for split
+- `dataset::DatasetName`: name (type) of the datset for split
 
 # Keywords
-- `train_size::Float64 = 0.8`: percentage of train data size
-- `random_seed::Int = 12345`: random seed for shuffling rows of the dataset
-- `return_df::Bool = true`: if true returns `DataFrame`, else returns `Array`
+- `trainSize::Float64 = 0.8`: percentage of train data size
+- `randomSeed::Int = 12345`: random seed for shuffling rows of the dataset
+- `returnDf::Bool = true`: if true returns `DataFrame`, else returns `Array`
 
-Return `DataFrame` or `Array` of train data and one-dimensional `Array` of corresponding
-train target values and similarly with test data and test target values.
+Return `DataFrame` (one with train data another with test data, target values and attributes
+are together in the `DataFrame`) or return `Array` (four arrays - two with train data
+(attributes and 1D array of target values) and two with test data)
 """
 function split_traintest(
-    dataset::String;
-    train_size::Float64=0.8,
-    random_seed::Int=12345,
-    return_df::Bool=true,
+    dataset::DatasetName;
+    trainSize::Float64=0.8,
+    randomSeed::Int=12345,
+    returnDf::Bool=true,
 )
-    path = get_path(dataset)
+    dsString = name(dataset)
+    path = get_path(dsString)
     df = CSV.File(path, header = true) |> DataFrame
 
-    if(return_df)
-        x = df[:,1:end-1]                   #values without target col
-    else
-        x = Array(df[:,1:end-1])
-    end
+    #create indeces for separation data for train and test
+    indecesTrain, indecesTest = _shuffle_indeces(df, trainSize, randomSeed)
 
-    y = df[:,end]                           #target 1D Array
-    n = size(x, 1)                          #row count
-    n_train = round(Int, train_size*n)      #count of rows of train data
-    Random.seed!(random_seed)
-    indeces = randperm(n)                   #randomly sorted indeces (numbers 1:n)
-    indeces_train = indeces[1:n_train]
-    indeces_test = indeces[n_train+1:end]
-
-    x_train = x[indeces_train, :]
-    y_train = y[indeces_train]
-    x_test = x[indeces_test, :]
-    y_test = y[indeces_test]
-
-    return x_train, y_train, x_test, y_test
+    return _return_splits(df, indecesTrain, indecesTest, returnDf)
 end
 
 """
@@ -51,48 +37,104 @@ end
 Split dataset from file to train, valid and test data.
 
 # Arguments
-- `dataset::String`: name of the datset for split
+-`dataset::DatasetName `: name of the datset for split
 
 # Keywords
-- `train_size::Float64 = 0.8`: percentage of train data size
-- `valid_size::Float64 = 0.2`: percentage of validation data size, selected from train data
-- `random_seed::Int = 12345`: random seed for shuffling rows of the dataset
-- `return_df::Bool = true`: if true returns `DataFrame`, else returns `Array`
+- `trainSize::Float64 = 0.8`: percentage of train data size
+- `validSize::Float64 = 0.2`: percentage of validation data size, selected from train data
+- `randomSeed::Int = 12345`: random seed for shuffling rows of the dataset
+- `returnDf::Bool = true`: if true returns `DataFrame`, else returns `Array`
 
 Return `DataFrame` or `Array` of train data and one-dimensional `Array` of corresponding
 train target values and similarly with test data and test target values.
 """
 function split_trainvalidtest(
-    dataset::String;
-    train_size::Float64=0.8,
-    valid_size::Float64=0.2,
-    random_seed::Int=12345,
-    return_df::Bool=true,
+    dataset::DatasetName;
+    trainSize::Float64=0.8,
+    validSize::Float64=0.2,
+    randomSeed::Int=12345,
+    returnDf::Bool=true,
 )
-    path = get_path(dataset)
+    dsString = name(dataset)
+    path = get_path(dsString)
     df = CSV.File(path, header = true) |> DataFrame
 
-    if(return_df)
-        x = df[:,1:end-1]                   #values
+    #create indeces for separation data for train and test
+    indecesTrain, indecesTest = _shuffle_indeces(df, trainSize, randomSeed)
+
+    #create indeces for separation data for validation and train
+    indecesValid, indecesTrain = _shuffle_indeces(indecesTrain, validSize, randomSeed)
+
+    return _return_splits(df, indecesTrain, indecesValid, indecesTest, returnDf)
+end
+
+"""
+    _shuffle_indeces(data, selectionSize, randomSeed)
+
+# Arguments
+- data`:`Array`, `DataFrame`
+- `selectionSize::Float64`: percentage, in what proportion data will be divided
+- `randomSeed::Int`: random seed for shuffling indeces
+"""
+    function _shuffle_indeces(
+    data,
+    selectionSize::Float64,
+    randomSeed::Int,
+)
+    n = size(data, 1)                               #row count
+    nSelection = round(Int, selectionSize*n)        #count of rows of train data
+    Random.seed!(randomSeed)
+    indeces = randperm(n)                           #randomly sorted indeces (numbers 1:n)
+    indecesSelection = indeces[1:nSelection]
+    indecesRest = indeces[nSelection+1:end]
+
+    return indecesSelection, indecesRest
+end
+
+#for train-test
+"""
+    _return_splits(df, indeces..., returnDf)
+
+Return data into two parts selected by given indeces.
+
+# Arguments
+- `df::DataFrame`
+- `indeces1`, `indeces2`: array of numbers (indeces)
+- `returnDf::Bool`: if true returns `DataFrame`, else returns `Array`
+"""
+function _return_splits(df::DataFrame, indeces1, indeces2, returnDf::Bool)
+    if returnDf
+        selection1 = df[indeces1,:]
+        selection2 = df[indeces2,:]
+        return selection1, selection2
     else
-        x = Array(df[:,1:end-1])
+        x1 = Array(df[indeces1,1:end-1])
+        y1 = df[indeces1,end]               #target 1D Array
+        x2 = Array(df[indeces2,1:end-1])
+        y2 = df[indeces2,end]                #target 1D Array
+        return x1, y1, x2, y2
     end
+end
 
-    y = df[:,end]                           #target 1D Array
-    n = size(x, 1)                          #row count
-    n_train = round(Int, train_size*n)      #count of rows of train data
-    Random.seed!(random_seed)
-    indeces = randperm(n)                   #randomly sorted indeces (numbers 1:n)
-    indeces_train = indeces[1:n_train]
-    indeces_test = indeces[n_train+1:end]
+#for train-valid-test
+"""
+    _return_splits(df, indeces..., returnDf)
 
-    #separate data for validation
-    n_valid = round(Int, valid_size*n_train)
-    indeces_valid = indeces_train[1:n_valid]
-    indeces_train = indeces_train[n_valid+1:end]
-    x_valid, y_valid = x[indeces_valid, :], y[indeces_valid]
-    x_train, y_train = x[indeces_train, :], y[indeces_train]
-    x_test, y_test = x[indeces_test, :], y[indeces_test]
+Return data into three parts selected by given indeces.
 
-    return x_train, y_train, x_valid, y_valid, x_test, y_test
+# Arguments
+- `df::DataFrame`
+- `indeces1`, `indeces2`, `indeces3`: array of numbers (indeces)
+- `returnDf::Bool`: if true returns `DataFrame`, else returns `Array`
+"""
+function _return_splits(df::DataFrame, indeces1, indeces2, indeces3, returnDf::Bool)
+    if returnDf
+        selection1, selection2 = _return_splits(df, indeces1, indeces2, true)
+        selection3 = df[indeces3,:]
+        return selection1, selection2, selection3
+    else
+        lits(df, indeces1, indeces2, false)
+        x3, y3 = Array(df[indeces3,1:end-1]), df[indeces3,end]
+        return x1, y1, x2, y2, x3, y3
+    end
 end

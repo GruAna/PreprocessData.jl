@@ -8,8 +8,8 @@ export split_traintest, split_trainvalidtest
 const DATASET_DIR = joinpath(@__DIR__, "datasets")
 
 include("utils.jl")
-include("split.jl")
 include("preprocessing.jl")
+include("split.jl")
 
 include.(readdir(DATASET_DIR; join = true))
 
