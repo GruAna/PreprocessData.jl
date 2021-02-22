@@ -1,10 +1,7 @@
 using PreprocessData
-#download dataset and create a simply preprocessed csv file
-#function call("name_of_dataset"), name_of_dataset.jl must be present in PreprocessData/src/datasets
+#to use dataset for functions, name_of_dataset.jl must be present in PreprocessData/src/datasets
 
-#dataset is now downloaded and can be further used
-
-#split dataset into train and test data
+#split dataset into train and test data, also download dataset and create a simply preprocessed csv file
 #by default values are returned as `DataFrame`(returnDf=true)
 #two DataFrames returned
 #targer values and attributes are not separated
@@ -31,3 +28,6 @@ split_trainvalidtest(
     validSize=0.15,
     randomSeed=123,
 )
+
+#download multiple files where labels and data separated, downloading merges labels and attributes
+call(PreprocessData.Gisette())
