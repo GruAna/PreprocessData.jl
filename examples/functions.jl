@@ -29,5 +29,13 @@ split_trainvalidtest(
     randomSeed=123,
 )
 
+#spli dataset that already has valid and train data separated
+split_trainvalidtest(
+    PreprocessData.Gisette(),
+    trainSize=0.7,
+    validSize=0.15,
+    randomSeed=123,
+)
+
 #download multiple files where labels and data separated, downloading merges labels and attributes
 call(PreprocessData.Gisette())

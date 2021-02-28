@@ -71,7 +71,7 @@ function preprocess(
 
     df = place_target(target_col, df)
 
-    path_for_save = joinpath(dirname(path), extension*"-"*name*".csv")
+    path_for_save = joinpath(dirname(path), string(extension,"-",name,".csv"))
     CSV.write(path_for_save, df, delim=',', writeheader=true)
     rm(path)
 end

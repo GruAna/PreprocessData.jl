@@ -1,11 +1,12 @@
 """
-    get_path(dataset)
+    get_files(dataset)
 
-Get path to the preprocessed dataset file `data-dataset.csv`.
+Get all files (filepaths) in dataset directory.
 """
-function get_path(dataset)
-    path = @datadep_str dataset
-    joinpath(path , "data-$dataset.csv")
+function get_files(dataset)
+    dsString = name(dataset)
+    path = @datadep_str dsString
+    return readdir(path, join=true)
 end
 
 """
