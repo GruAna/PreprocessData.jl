@@ -1,6 +1,11 @@
 abstract type DatasetName end
 name(dn::DatasetName) = lowercasefirst(String(nameof(typeof(dn))))
 function preprocess(::DatasetName) end
+function datasettype(::DatasetName) end
+abstract type DatasetType end
+struct Tabular <: DatasetType end
+extension(dn::DatasetName) = extension(datasettype(dn))
+extension(::Type{Tabular}) = "csv"
 
 """
     function call(dataset)
@@ -28,6 +33,8 @@ function registering(dsName::DatasetName)
     ))
 end
 
+
+
 """
     preprocess(path, name, header_names, target_col, categorical_cols, kwargs...)
 
@@ -47,14 +54,20 @@ if not names `Column 1` are created.
 dataset.
 """
 function preprocess(
-    path::String;
+    path::String,
+    datasettype;
     header_names::Union{Vector{String}, Vector{Symbol}, Int}=0,
-    target_col=0,
+    target_col="",
     categorical_cols::Union{Int, UnitRange{Int}, Array{Int,1}}=1:0,
     kwargs...
 )
-    name = get_filename(path)[1]
-    extension = get_filename(path)[end]
+    name = get_filename(path)
+    extOld = get_fileext(path)
+    extNew = extension(datasettype)
+
+
+    typeSplit = _find_in(name)
+
     df = CSV.File(
         path,
         header = header_names,
@@ -69,12 +82,31 @@ function preprocess(
         rename!(df, i => "Categ-"*names(df)[i])
     end
 
+    if typeof(target_col) == String
+        target_col = string("labels-", typeSplit)
+    end
     df = place_target(target_col, df)
 
-    path_for_save = joinpath(dirname(path), string(extension,"-",name,".csv"))
+    path_for_save = joinpath(dirname(path), string("data-",typeSplit,".",extNew))
     CSV.write(path_for_save, df, delim=',', writeheader=true)
     rm(path)
 end
+
+function preprocess(path::String)
+    typeSplit = _find_in(get_filename(path))
+    mv(basename(path), string("labels-", typeSplit))
+end
+
+function _find_in(name::String)
+    if occursin("train", name) || (!occursin("valid", name) && !occursin("test", name))
+        return "train"
+    elseif occursin("valid", name)
+        return "valid"
+    elseif occursin("test", name)
+        return "test"
+    end
+end
+
 
 function place_target(target_col::Int, df)
     last_col_index = ncol(df)
@@ -91,8 +123,8 @@ function place_target(target_col::Int, df)
     return df
 end
 
-function place_target(target_col::String, df)
-    pathLabels = joinpath(pwd(), target_col)
+function place_target(fileName::String, df)
+    pathLabels = joinpath(pwd(), fileName)
     println(pathLabels)
     dfLabels = CSV.File(
         pathLabels,

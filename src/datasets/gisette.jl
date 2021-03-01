@@ -18,10 +18,11 @@ function checksum(::Gisette)
 end
 function preprocess(::Gisette)
     [
-        identity,
-        path -> preprocess(path,  target_col="gisette_valid.labels"),
-        identity,
-        path -> preprocess(path,  target_col="gisette_train.labels")
+        path -> preprocess(path),
+        path -> preprocess(path, datasettype(Gisette()), target_col="gisette_valid.labels"),
+        path -> preprocess(path),
+        path -> preprocess(path, datasettype(Gisette()), target_col="gisette_train.labels")
     ]
 end
-sampleSize(::Gisette) = (7000,)
+sampleSize(::Gisette) = (6000, 1000, 0)
+datasettype(::Gisette) = Tabular

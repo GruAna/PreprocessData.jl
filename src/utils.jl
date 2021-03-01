@@ -16,6 +16,11 @@ Get name of the file without filename extension.
 `path` must include filename.
 """
 function get_filename(path)
-    filename = splitdir(path)[end]
-    return split(filename,".")
+    filename = basename(path)
+    return splitext(filename)[1]
+end
+
+function get_fileext(path)
+    filename = basename(path)
+    return (splitext(filename)[2])[2:end]
 end
