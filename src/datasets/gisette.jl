@@ -24,5 +24,5 @@ function preprocess(::Gisette)
         path -> preprocess(path, datasettype(Gisette()), target_col="gisette_train.labels")
     ]
 end
-sampleSize(::Gisette) = (6000, 1000, 0)
+size(::Gisette) = (6000, 1000, 0)
 datasettype(::Gisette) = Tabular

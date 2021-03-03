@@ -9,11 +9,12 @@ Split dataset from file to train and test data.
 # Keywords
 - `trainSize::Float64 = 0.8`: percentage of train data size
 - `randomSeed::Int = 12345`: random seed for shuffling rows of the dataset
-- `returnDf::Bool = true`: if true returns `DataFrame`, else returns `Array`
+- `returnDf::Bool = true`: if true returns `DataFrame`, else returns `Tuple` of arrays
 
-Return `DataFrame` (one with train data another with test data, target values and attributes
-are together in the `DataFrame`) or return `Array` (four arrays - two with train data
-(attributes and 1D array of target values) and two with test data)
+Return `Tuple{DataFrame}` (3 DataFrames - first with train data, second with test data,
+target values and attributes are together in the `DataFrame`) or return `Tuple{Tuple{Array})`
+(two inner tuples - first contains train data (first array attributes and second 1D array
+labels) and second test data).
 """
 function split_traintest(
     dataset::DatasetName;
@@ -21,40 +22,29 @@ function split_traintest(
     randomSeed::Int=12345,
     returnDf::Bool=true,
 )
+    if !has_traindata(dataset)
+        error("No train data in $call(dataset). Check $dataset registration file
+        and its function `size`.")
+    end
+
     pathToFile = get_files(dataset)
 
-    # pathToFile may contain multiple files with already split dataset,
-    # get indeces of those files in array pathToFile.
-    # We are looking only for Train and Test files.
-    indexTr = _getIndexOfFile(pathToFile, "train")
-    indexTe = _getIndexOfFile(pathToFile, "test")
+    # size(dataset) = (train::Int, valid::Int, test::Int)
+    # in pathToFile files are in this order: test, train, valid (indeces 1, 2, 3),
+    # if test is missing then train file is under index 1.
+    # If both files with train and test data are in directory.
+    if size(dataset)[3] > 0
+        @info "Dataset already separated."
 
-    # if both files with train and test data are in directory
-    if indexTe != Int(0) && indexTr != Int(0)
-        @info "Dataset already separated"
+        dfTrain = CSV.File(pathToFile[2], header = true) |> DataFrame
+        dfTest = CSV.File(pathToFile[1], header = true) |> DataFrame
 
-# To be done: ask user to create new split, or let it be...
-# Do you want to merge current split and create new one with $randomSeed and $trainSize?
-
-        dfTrain = CSV.File(pathToFile[indexTr], header = true) |> DataFrame
-        dfTest = CSV.File(pathToFile[indexTe], header = true) |> DataFrame
-
-        if returnDf
-            return dfTrain, dfTest
-        else
-            xTrain, yTrain = dfToArray(dfTrain, :)
-            xTest, yTest = dfToArray(dfTest, :)
-            return xTrain, yTrain, xTest, yTest
-        end
+        return df_or_array(dfTrain, returnDf), df_or_array(dfTest, returnDf)
     end
 
-    # If no index containing the word "train" found,
-    # set as the file to be splitted the first file, assuming it is the only one.
-    if indexTr == Int(0)
-        indexTr = 1
-    end
-
-    df = CSV.File(pathToFile[indexTr], header = true) |> DataFrame
+    # in this case only there shall be only train data that needs to be separated to train
+    # and test. (we are not interested in valid date in this case)
+    df = CSV.File(pathToFile[1], header = true) |> DataFrame
 
     #create indeces for separation data for train and test
     indecesTrain, indecesTest = _shuffle_indeces(df, trainSize, randomSeed)
@@ -74,10 +64,11 @@ Split dataset from file to train, valid and test data.
 - `trainSize::Float64 = 0.8`: percentage of train data size
 - `validSize::Float64 = 0.2`: percentage of validation data size, selected from train data
 - `randomSeed::Int = 12345`: random seed for shuffling rows of the dataset
-- `returnDf::Bool = true`: if true returns `DataFrame`, else returns `Array`
+- `returnDf::Bool = true`: if true returns `DataFrame`, else returns `Tuple` of arrays
 
-Return `DataFrame` or `Array` of train data and one-dimensional `Array` of corresponding
-train target values and similarly with test data and test target values.
+Return `Tuple{DataFrame}` or `Tuple{Tuple{Array}}`. Return splitted data in order: train, valid, test.
+If `returnDf = true` return 3 `DataFrames`, else return 3 tuples of arrays (first array
+represents attributes, second represents labels for each).
 """
 function split_trainvalidtest(
     dataset::DatasetName;
@@ -86,44 +77,57 @@ function split_trainvalidtest(
     randomSeed::Int=12345,
     returnDf::Bool=true,
 )
+    if !has_traindata(dataset)
+        error("No train data in $call(dataset). Check $dataset registration file
+        and its function `size`.")
+    end
+
     pathToFile = get_files(dataset)
 
-    # pathToFile may contain multiple files with already split dataset,
-    # get indeces of those files in array pathToFile.
-    indexTr = _getIndexOfFile(pathToFile, "train")
-    indexVal = _getIndexOfFile(pathToFile, "valid")
-    indexTe = _getIndexOfFile(pathToFile, "test")
+    # If train, valid, test are present.
+    if size(dataset)[2] != 0 && size(dataset)[3] != 0
+        @info "Dataset already separated."
 
-    if indexTe != Int(0) && indexTr != Int(0) && indexVal != 0
-        @info "Dataset already separated"
+        dfTrain = CSV.File(pathToFile[2], header = true) |> DataFrame
+        dfVal = CSV.File(pathToFile[3], header = true) |> DataFrame
+        dfTest = CSV.File(pathToFile[1], header = true) |> DataFrame
 
-# To be done: ask user to create new split, or let it be...
-# Do you want to merge current split and create new one with $randomSeed and $trainSize?
-
-        dfTrain = CSV.File(pathToFile[indexTr], header = true) |> DataFrame
-        dfVal = CSV.File(pathToFile[indexVal], header = true) |> DataFrame
-        dfTest = CSV.File(pathToFile[indexTe], header = true) |> DataFrame
-
-        if returnDf
-            return dfTrain, dfVal, dfTest
-        else
-            xTrain, yTrain = dfToArray(dfTrain, :)
-            xVal, yVal = dfToArray(dfVal, :)
-            xTest, yTest = dfToArray(dfTest, :)
-            return xTrain, yTrain, xVal, yVal, xTest, yTest
-        end
+        return df_or_array(dfTrain, returnDf), df_or_array(dfVal, returnDf), df_or_array(dfTest, returnDf)
     end
 
     # If train and validation data are present in the directory but no test data.
-    # Create test data from train data
-    if indexTr != Int(0) && indexVal != 0 && indexTe == Int(0)
-        dfTrain = CSV.File(pathToFile[indexTr], header = true) |> DataFrame
-        dfVal = CSV.File(pathToFile[indexVal], header = true) |> DataFrame
+    # Create test data from train data.
+    if size(dataset)[2] != 0 && size(dataset)[3] == 0
+        @info "Dataset already has data for validation, now separating test data."
+
+        dfTrain = CSV.File(pathToFile[1], header = true) |> DataFrame
+        dfVal = CSV.File(pathToFile[2], header = true) |> DataFrame
 
         #create indeces for separation data for train and test
         indecesTrain, indecesTest = _shuffle_indeces(dfTrain, trainSize, randomSeed)
 
-        return _return_splits(dfTrain, indecesTrain, indecesTest, returnDf), _return_df_or_array(dfVal, returnDf)
+        if returnDf
+            dfTrain, dfTest = _return_splits(dfTrain, indecesTrain, indecesTest, returnDf)
+            return dfTrain, dfVal, dfTest
+        else
+
+            train, test = _return_splits(dfTrain, indecesTrain, indecesTest, returnDf)
+
+            return train, df_to_array(dfVal), test
+        end
+    end
+
+    # If train and test data are present but no valid data.
+    # Create valid data from train data
+    if size(dataset)[3] != 0
+        dfTrain = CSV.File(pathToFile[2], header = true) |> DataFrame
+        dfTest = CSV.File(pathToFile[1], header = true) |> DataFrame
+
+        #create indeces for separation data for train and test
+        indecesTrain, indecesValid = _shuffle_indeces(dfTrain, validSize, randomSeed)
+
+        return _return_splits(dfTrain, indecesTrain, indecesValid, returnDf), df_or_array(dfVal, returnDf)
+
     end
 
     df = CSV.File(pathToFile[1], header = true) |> DataFrame
@@ -150,7 +154,7 @@ end
     selectionSize::Float64,
     randomSeed::Int,
 )
-    n = size(data, 1)                               #row count
+    n = Base.size(data, 1)                               #row count
     nSelection = round(Int, selectionSize*n)        #count of rows of train data
     Random.seed!(randomSeed)
     indeces = randperm(n)                           #randomly sorted indeces (numbers 1:n)
@@ -172,15 +176,7 @@ Return data selected into two parts (train, test) by given indeces.
 - `returnDf::Bool`: if true returns `DataFrame`, else returns `Array`
 """
 function _return_splits(df::DataFrame, indeces1, indeces2, returnDf::Bool)
-    if returnDf
-        selection1 = df[indeces1,:]
-        selection2 = df[indeces2,:]
-        return selection1, selection2
-    else
-        x1, y1 = dfToArray(df, indeces1)
-        x2, y2 = dfToArray(df, indeces2)
-        return x1, y1, x2, y2
-    end
+    return df_or_array(df[indeces1,:], returnDf), df_or_array(df[indeces2,:], returnDf)
 end
 
 #for train-valid-test
@@ -195,43 +191,35 @@ Return data selected into three parts (train, valid, test) by given indeces.
 - `returnDf::Bool`: if true returns `DataFrame`, else returns `Array`
 """
 function _return_splits(df::DataFrame, indeces1, indeces2, indeces3, returnDf::Bool)
-    if returnDf
-        selection1, selection2 = _return_splits(df, indeces1, indeces2, true)
-        selection3 = df[indeces3,:]
-        return selection1, selection2, selection3
-    else
-        x1, y1, x2, y2 = _return_splits(df, indeces1, indeces2, false)
-        x3, y3 = dfToArray(df, indeces3)
-        return x1, y1, x2, y2, x3, y3
-    end
+    return df_or_array(df[indeces1,:], returnDf), df_or_array(df[indeces2,:], returnDf), df_or_array(df[indeces3,:], returnDf)
 end
 
-function _return_df_or_array(df::DataFrame, returnDf::Bool)
+"""
+    df_or_array(df::DataFrame, returnDf::Bool)
+
+    Based on returnDf return either a `DataFrame` (true) or an `Array` (false).
+"""
+function df_or_array(df::DataFrame, returnDf::Bool)
     if returnDf
         return df
     else
-        return dfToArray(df,:)
+        return df_to_array(df)
     end
 end
 
-function dfToArray(df::DataFrame, indeces)
-    return x, y = Array(df[indeces,1:end-1]), df[indeces,end]
+function df_to_array(df::DataFrame)
+    return Array(df[:,1:end-1]), df[:,end]
 end
 
 """
-    _getIndexOfFile(paths::AbstractArray, findStr::String)
+    has_traindata(dataset::DatasetName)
 
-    Return index of array element that contains a given String.
-    Used to find file in with given String among other files.
+Return true if `size(dataset)[1] != 0`, else return false.
 """
-function _getIndexOfFile(paths::AbstractArray, findStr::String)
-    index::Int = 0
-    containing = contains.(paths, findStr)
-    for i in containing
-        if i == 1
-            index = i
-            return index
-        end
+function has_traindata(dataset::DatasetName)
+    if size(dataset)[1] != 0
+        return true
+    else
+        return false
     end
-    return index
 end
