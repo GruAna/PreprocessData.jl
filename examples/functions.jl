@@ -55,5 +55,9 @@ valid_labels = valid[2]
 test_attributes = test[1]
 test_labels = test[2]
 
+#split image data from MLDatasets
+train, test = split_traintest(PreprocessData.CIFAR10())
+train, valid, test = split_trainvalidtest(PreprocessData.CIFAR100())
+
 #download multiple files where labels and data separated, downloading merges labels and attributes
 call(PreprocessData.Gisette())
