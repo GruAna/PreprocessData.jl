@@ -1,4 +1,4 @@
-struct Gisette <: DatasetName end
+struct Gisette <: Tabular end
 function url(::Gisette)
     [
         "https://archive.ics.uci.edu/ml/machine-learning-databases/gisette/gisette_valid.labels",
@@ -19,10 +19,9 @@ end
 function preprocess(::Gisette)
     [
         path -> preprocess(path),
-        path -> preprocess(path, datasettype(Gisette()), target_col="gisette_valid.labels"),
+        path -> preprocess(path, Gisette(), target_col="gisette_valid.labels"),
         path -> preprocess(path),
-        path -> preprocess(path, datasettype(Gisette()), target_col="gisette_train.labels")
+        path -> preprocess(path, Gisette(), target_col="gisette_train.labels")
     ]
 end
 size(::Gisette) = (6000, 1000, 0)
-datasettype(::Gisette) = Tabular

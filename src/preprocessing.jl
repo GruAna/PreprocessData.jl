@@ -1,11 +1,11 @@
 abstract type DatasetName end
 name(dn::DatasetName) = lowercasefirst(String(nameof(typeof(dn))))
 function preprocess(::DatasetName) end
-function datasettype(::DatasetName) end
-abstract type DatasetType end
-struct Tabular <: DatasetType end
-extension(dn::DatasetName) = extension(datasettype(dn))
-extension(::Type{Tabular}) = "csv"
+abstract type Tabular <: DatasetName end
+abstract type Image <: DatasetName end
+function getModule(::Image) end
+extension(dn::DatasetName) = extension(dn)
+extension(::Tabular) = "csv"
 
 """
     function call(dataset)
@@ -55,16 +55,14 @@ dataset.
 """
 function preprocess(
     path::String,
-    datasettype;
+    dataset::DatasetName;
     header_names::Union{Vector{String}, Vector{Symbol}, Int}=0,
     target_col="",
     categorical_cols::Union{Int, UnitRange{Int}, Array{Int,1}}=1:0,
     kwargs...
 )
     name = get_filename(path)
-    extOld = get_fileext(path)
-    extNew = extension(datasettype)
-
+    ext = extension(dataset)
 
     typeSplit = _find_in(name)
 
@@ -87,7 +85,7 @@ function preprocess(
     end
     df = place_target(target_col, df)
 
-    path_for_save = joinpath(dirname(path), string("data-",typeSplit,".",extNew))
+    path_for_save = joinpath(dirname(path), string("data-",typeSplit,".",ext))
     CSV.write(path_for_save, df, delim=',', writeheader=true)
     rm(path)
 end

@@ -1,6 +1,6 @@
 """
-    When dataset does not lead to a valid file dataset.jl
+    When `size(dataset)[1] == 0`.
 """
-struct DatasetNotFoundErr <: Exception
-    msg::String
+struct noTrainData <: Exception
+    msg::String = "No train data in $call(dataset)"
 end
