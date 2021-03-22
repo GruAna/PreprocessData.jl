@@ -1,3 +1,5 @@
+function getModule(::Image) end
+
 """
     get_files(dataset)
 

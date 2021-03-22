@@ -9,6 +9,7 @@ export split_traintest, split_trainvalidtest
 const DATASET_DIR_TAB = joinpath(@__DIR__, "datasets/tabular")
 const DATASET_DIR_IMG = joinpath(@__DIR__, "datasets/image")
 
+include("types.jl")
 include("utils.jl")
 include("preprocessing.jl")
 include("split.jl")
