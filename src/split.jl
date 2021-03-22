@@ -17,7 +17,7 @@ target values and attributes are together in the `DataFrame`) or return `Tuple{T
 labels) and second test data).
 """
 function split_traintest(
-    dataset::Tabular;
+    dataset::DatasetName;
     trainSize::Float64=0.8,
     randomSeed::Int=12345,
     returnArray::Bool=false,
@@ -25,56 +25,28 @@ function split_traintest(
     if !has_traindata(dataset)
         error("No train data found in $(call(dataset)). Check $dataset registration file
         and its function `size`.")
+        return nothing
     end
-
-    pathToFile = get_files(dataset)
 
     # If both files with train and test data are in directory.
     # size(dataset) = (train::Int, valid::Int, test::Int)
-    # in pathToFile files are in this order: test, train, valid (indeces 1, 2, 3),
-    # if test is missing then train file is under index 1.
     if size(dataset)[3] > 0
         @info "Dataset already separated."
 
-        dfTrain = _get_data(pathToFile, 2)
-        dfTest = _get_data(pathToFile, 1)
+        train = get_data(dataset, :train)
+        test = get_data(dataset, :test)
 
-        return df_or_array(dfTrain, returnArray), df_or_array(dfTest, returnArray)
+        # in this case there shall be only train data that needs to be separated to train
+        # and test. (we are not interested in valid data in this case)
+    else
+        @info "Dataset has only train data. Separating test data from train data."
+
+        train = get_data(dataset, :train)
+        indecesTrain, indecesTest = shuffle_indeces(train, trainSize, randomSeed)
+        train, test = splits(dataset, train, indecesTrain, indecesTest)
     end
 
-    # in this case only there shall be only train data that needs to be separated to train
-    # and test. (we are not interested in valid data in this case)
-    df = _get_data(pathToFile, 1)
-
-    #create indeces for separation data for train and test
-    indecesTrain, indecesTest = _shuffle_indeces(df, trainSize, randomSeed)
-
-    return _return_splits(df, indecesTrain, indecesTest, returnArray)
-end
-
-
-"""
-    split_traintest(dataset::Image)
-
-Works with MNIST datasets using package `MLDatasets`.
-Dataset is already separated to train and test data.
-"""
-function split_traintest(dataset::Image)
-    if !has_traindata(dataset)
-        error("No train data found in $(call(dataset)). Check $dataset registration file
-        and its function `size`.")
-    end
-
-    datadep = getModule(dataset)
-    # If both files with train and test data are in directory.
-    # size(dataset) = (train::Int, valid::Int, test::Int)
-    # in pathToFile files are in this order: test, train, valid (indeces 1, 2, 3),
-    # if test is missing then train file is under index 1.
-    if size(dataset)[3] > 0
-        @info "Dataset already separated."
-
-        return datadep.traindata(), datadep.testdata()
-    end
+    return final_data(dataset, returnArray, train, test)
 end
 
 """
@@ -96,7 +68,7 @@ If `returnArray = true` return 3 `DataFrames`, else return 3 tuples of arrays (f
 represents attributes, second represents labels for each).
 """
 function split_trainvalidtest(
-    dataset::Tabular;
+    dataset::DatasetName;
     trainSize::Float64=0.8,
     validSize::Float64=0.2,
     randomSeed::Int=12345,
@@ -105,101 +77,55 @@ function split_trainvalidtest(
     if !has_traindata(dataset)
         error("No train data in $call(dataset). Check $dataset registration file
         and its function `size`.")
+        return nothing
     end
-
-    pathToFile = get_files(dataset)
 
     # If train, valid, test are present.
     if size(dataset)[2] != 0 && size(dataset)[3] != 0
         @info "Dataset already separated."
 
-        dfTrain = _get_data(pathToFile, 2)
-        dfVal = _get_data(pathToFile, 3)
-        dfTest = _get_data(pathToFile, 1)
-
-        return df_or_array(dfTrain, returnArray), df_or_array(dfVal, returnArray), df_or_array(dfTest, returnArray)
-    end
+        train = get_data(dataset, :train)
+        valid = get_data(dataset, :valid)
+        test = get_data(dataset, :test)
 
     # If train and validation data are present in the directory but no test data.
     # Create test data from train data.
-    if size(dataset)[2] != 0 && size(dataset)[3] == 0
+    elseif size(dataset)[2] != 0 && size(dataset)[3] == 0
         @info "Dataset already has data for validation, now separating test data."
 
-        dfTrain = _get_data(pathToFile, 1)
-        dfVal = _get_data(pathToFile, 2)
+        train = get_data(dataset, :train)
+        valid = get_data(dataset, :valid)
 
         #create indeces for separation data for train and test
-        indecesTrain, indecesTest = _shuffle_indeces(dfTrain, trainSize, randomSeed)
-
-        if returnArray
-            dfTrain, dfTest = _return_splits(dfTrain, indecesTrain, indecesTest, returnArray)
-            return dfTrain, dfVal, dfTest
-        else
-
-            train, test = _return_splits(dfTrain, indecesTrain, indecesTest, returnArray)
-
-            return train, df_to_array(dfVal), test
-        end
-    end
+        indecesTrain, indecesTest = shuffle_indeces(train, trainSize, randomSeed)
+        train, test = splits(dataset, train, indecesTrain, indecesTest)
 
     # If train and test data are present but no valid data.
     # Create valid data from train data
-    if size(dataset)[3] != 0
-        dfTrain = _get_data(pathToFile, 2)
-        dfTest = _get_data(pathToFile, 1)
+    elseif size(dataset)[3] != 0
+        @info "Dataset already has data for testing, now separating validation data."
+
+        train = get_data(dataset, :train)
+        test = get_data(dataset, :test)
 
         #create indeces for separation data for train and test
-        indecesValid, indecesTrain = _shuffle_indeces(dfTrain, validSize, randomSeed)
+        indecesValid, indecesTrain = shuffle_indeces(train[2], validSize, randomSeed)
+        valid, train = splits(dataset, train, indecesValid, indecesTrain)
+    else
+        @info "Dataset has only train data. Separating test and validation data from train data."
 
-        return _return_splits(dfTrain, indecesTrain, indecesValid, returnArray), df_or_array(dfTest, returnArray)
-    end
-
-    df = _get_data(pathToFile, 1)
-
-    #create indeces for separation data for train and test
-    indecesTrain, indecesTest = _shuffle_indeces(df, trainSize, randomSeed)
-
-    #create indeces for separation data for validation and train
-    indecesValid, indecesTrain = _shuffle_indeces(indecesTrain, validSize, randomSeed)
-
-    return _return_splits(df, indecesTrain, indecesValid, indecesTest, returnArray)
-end
-
-"""
-    split_trainvalidtest(dataset::Image; kwargs...)
-
-Works with MNIST datasets using package `MLDatasets`.
-Dataset is already separated to train and test data.
-
-# Keywords
-- `validSize::Float64 = 0.2`: percentage of validation data size, selected from train data
-- `randomSeed::Int = 12345`: random seed for shuffling rows of the dataset
-)
-"""
-function split_trainvalidtest(
-    dataset::Image;
-    validSize::Float64=0.2,
-    randomSeed::Int=12345,
-)
-    if !has_traindata(dataset)
-        error("No train data in $call(dataset). Check $dataset registration file
-        and its function `size`.")
-    end
-
-    datadep = getModule(dataset)
-
-    # If train and test data are present but no valid data.
-    # Create valid data from train data
-    if size(dataset)[3] != 0
-        train_x, train_y = datadep.traindata()
+        train = get_data(dataset, :train)
 
         #create indeces for separation data for train and test
-        indecesValid, indecesTrain = _shuffle_indeces(train_y, validSize, randomSeed)
-        train_x, train_y = datadep.traintensor(indecesTrain), datadep.trainlabels(indecesTrain)
-        valid_x, valid_y = datadep.traintensor(indecesValid), datadep.trainlabels(indecesValid)
+        indecesTrain, indecesTest = shuffle_indeces(train[2], trainSize, randomSeed)
+        train, test = splits(dataset, train, indecesTrain, indecesTest)
 
-        return (train_x, train_y), (valid_x, valid_y), datadep.testdata()
+        #create indeces for separation data for validation and train
+        indecesValid, indecesTrain = shuffle_indeces(indecesTrain, validSize, randomSeed)
+        valid, train = splits(dataset, train, indecesValid, indecesTrain)
     end
+
+    return final_data(dataset, returnArray, train, valid, test)
 end
 
 """
@@ -213,7 +139,7 @@ second the rest (together 100%).
 - `selectionSize::Float64`: percentage, in what proportion data will be divided
 - `randomSeed::Int`: random seed for shuffling indeces
 """
-    function _shuffle_indeces(
+    function shuffle_indeces(
     data,
     selectionSize::Float64,
     randomSeed::Int,
@@ -226,36 +152,6 @@ second the rest (together 100%).
     indecesRest = indeces[nSelection+1:end]
 
     return indecesSelection, indecesRest
-end
-
-#for train-test split
-"""
-    _return_splits(df, indeces..., returnArray)
-
-Return data selected into two parts (train, test) by given indeces.
-
-# Arguments
-- `df::DataFrame`
-- `indeces1`, `indeces2`: array of numbers (indeces)
-- `returnArray::Bool`: if true returns `DataFrame`, else returns `Array`
-"""
-function _return_splits(df::DataFrame, indeces1, indeces2, returnArray::Bool)
-    return df_or_array(df[indeces1,:], returnArray), df_or_array(df[indeces2,:], returnArray)
-end
-
-#for train-valid-test
-"""
-    _return_splits(df, indeces..., returnArray)
-
-Return data selected into three parts (train, valid, test) by given indeces.
-
-# Arguments
-- `df::DataFrame`
-- `indeces1`, `indeces2`, `indeces3`: array of numbers (indeces)
-- `returnArray::Bool`: if true returns `DataFrame`, else returns `Array`
-"""
-function _return_splits(df::DataFrame, indeces1, indeces2, indeces3, returnArray::Bool)
-    return df_or_array(df[indeces1,:], returnArray), df_or_array(df[indeces2,:], returnArray), df_or_array(df[indeces3,:], returnArray)
 end
 
 """
@@ -271,6 +167,59 @@ function has_traindata(dataset::DatasetName)
     end
 end
 
-function _get_data(path, index::Int)
-    return CSV.File(path[index], header = true) |> DataFrame
+function get_data(dataset::Tabular, type::Symbol)
+    # path = path to files in a directory of given datadep
+    # in path files are in this order: test, train, valid (indeces 1, 2, 3),
+    # if test is missing then train and valid file is under index 1 and 2 respectively.
+    path = get_files(dataset)
+    if type == :train
+        if size(dataset)[3] > 0
+            return CSV.File(path[2], header = true) |> DataFrame
+        else
+            return CSV.File(path[1], header = true) |> DataFrame
+        end
+    elseif type == :test
+        return CSV.File(path[1], header = true) |> DataFrame
+    else
+        if size(dataset)[3] > 0
+            return CSV.File(path[3], header = true) |> DataFrame
+        else
+            return CSV.File(path[2], header = true) |> DataFrame
+        end
+    end
+end
+
+function get_data(dataset::MLImage, type::Symbol)
+    datadep = getModule(dataset)
+    if type == :train
+        return datadep.traindata()
+    elseif type == :test
+        return datadep.testdata()
+    end
+end
+
+function splits(dataset::Tabular, data, indeces1, indeces2)
+    #create indeces for separation data
+    return data[indeces1,:], data[indeces2,:]
+end
+
+function splits(dataset::MLImage, data,  indeces1, indeces2)
+    datadep = getModule(dataset)
+    return datadep.traindata(indeces1), datadep.traindata(indeces2)
+end
+
+function final_data(dataset::Tabular, returnArray::Bool, data1::DataFrame, data2::DataFrame)
+    return df_or_array(returnArray, data1), df_or_array(returnArray, data2)
+end
+
+function final_data(dataset::Image, returnArray::Bool, data1, data2)
+    return data1, data2
+end
+
+function final_data(dataset::Tabular, returnArray::Bool, data1::DataFrame, data2::DataFrame, data3::DataFrame)
+    return df_or_array(returnArray, data1), df_or_array(returnArray, data2), df_or_array(returnArray, data3)
+end
+
+function final_data(dataset::Image, returnArray::Bool, data1, data2, data3)
+    return data1, data2, data3
 end

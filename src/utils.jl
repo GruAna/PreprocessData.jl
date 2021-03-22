@@ -26,17 +26,14 @@ function get_filetext(path)
 end
 
 """
-    df_or_array(df::DataFrame, returnArray::Bool)
+    df_or_array(returnArray::Bool, df::DataFrame)
 
     Based on returnArray return either a `DataFrame` (true) or an `Array` (false).
 """
-function df_or_array(df::DataFrame, returnArray::Bool)
-    if returnArray
-        return df_to_array(df)
-    else
-        return df
-    end
+function df_or_array(returnArray::Bool, df::DataFrame)
+    return returnArray ? df_to_array(df) : df
 end
+
 
 function df_to_array(df::DataFrame)
     return Array(df[:,1:end-1]), df[:,end]

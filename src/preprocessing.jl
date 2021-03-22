@@ -3,6 +3,7 @@ name(dn::DatasetName) = lowercasefirst(String(nameof(typeof(dn))))
 function preprocess(::DatasetName) end
 abstract type Tabular <: DatasetName end
 abstract type Image <: DatasetName end
+abstract type MLImage <: Image end
 function getModule(::Image) end
 extension(dn::DatasetName) = extension(dn)
 extension(::Tabular) = "csv"
