@@ -42,7 +42,7 @@ function split_traintest(
         @info "Dataset has only train data. Separating test data from train data."
 
         train = get_data(dataset, :train)
-        indecesTrain, indecesTest = shuffle_indeces(train, trainSize, randomSeed)
+        indecesTrain, indecesTest = shuffle_indeces(size(dataset)[1], trainSize, randomSeed)
         train, test = splits(dataset, train, indecesTrain, indecesTest)
     end
 
@@ -97,7 +97,7 @@ function split_trainvalidtest(
         valid = get_data(dataset, :valid)
 
         #create indeces for separation data for train and test
-        indecesTrain, indecesTest = shuffle_indeces(train, trainSize, randomSeed)
+        indecesTrain, indecesTest = shuffle_indeces(size(dataset)[1], trainSize, randomSeed)
         train, test = splits(dataset, train, indecesTrain, indecesTest)
 
     # If train and test data are present but no valid data.
@@ -109,7 +109,7 @@ function split_trainvalidtest(
         test = get_data(dataset, :test)
 
         #create indeces for separation data for train and test
-        indecesValid, indecesTrain = shuffle_indeces(train[2], validSize, randomSeed)
+        indecesValid, indecesTrain = shuffle_indeces(size(dataset)[1], validSize, randomSeed)
         valid, train = splits(dataset, train, indecesValid, indecesTrain)
     else
         @info "Dataset has only train data. Separating test and validation data from train data."
@@ -117,11 +117,11 @@ function split_trainvalidtest(
         train = get_data(dataset, :train)
 
         #create indeces for separation data for train and test
-        indecesTrain, indecesTest = shuffle_indeces(train[2], trainSize, randomSeed)
+        indecesTrain, indecesTest = shuffle_indeces(size(dataset)[1], trainSize, randomSeed)
         train, test = splits(dataset, train, indecesTrain, indecesTest)
 
         #create indeces for separation data for validation and train
-        indecesValid, indecesTrain = shuffle_indeces(indecesTrain, validSize, randomSeed)
+        indecesValid, indecesTrain = shuffle_indeces(Base.size(indecesTrain,1), validSize, randomSeed)
         valid, train = splits(dataset, train, indecesValid, indecesTrain)
     end
 
@@ -140,11 +140,11 @@ second the rest (together 100%).
 - `randomSeed::Int`: random seed for shuffling indeces
 """
     function shuffle_indeces(
-    data,
+    n,
     selectionSize::Float64,
     randomSeed::Int,
 )
-    n = Base.size(data, 1)                               #row count
+    # n = Base.size(data, 1)                               #row count
     nSelection = round(Int, selectionSize*n)        #count of rows of train data
     Random.seed!(randomSeed)
     indeces = randperm(n)                           #randomly sorted indeces (numbers 1:n)
@@ -212,14 +212,10 @@ function final_data(dataset::Tabular, returnArray::Bool, data1::DataFrame, data2
     return df_or_array(returnArray, data1), df_or_array(returnArray, data2)
 end
 
-function final_data(dataset::Image, returnArray::Bool, data1, data2)
-    return data1, data2
-end
-
 function final_data(dataset::Tabular, returnArray::Bool, data1::DataFrame, data2::DataFrame, data3::DataFrame)
     return df_or_array(returnArray, data1), df_or_array(returnArray, data2), df_or_array(returnArray, data3)
 end
 
-function final_data(dataset::Image, returnArray::Bool, data1, data2, data3)
-    return data1, data2, data3
+function final_data(dataset::Image, returnArray::Bool, data...)
+    return data
 end
