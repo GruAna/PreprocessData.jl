@@ -208,8 +208,8 @@ function splits(dataset::MLImage, data,  indeces1, indeces2)
     return datadep.traindata(indeces1), datadep.traindata(indeces2)
 end
 
-function final_data(dataset::Tabular, returnArray::Bool, data1::DataFrame, data2::DataFrame)
-    return df_or_array(returnArray, data1), df_or_array(returnArray, data2)
+function final_data(dataset::Tabular, returnArray::Bool, data::DataFrame...)
+    return ([df_or_array(returnArray, d) for d in data]...,)
 end
 
 function final_data(dataset::Tabular, returnArray::Bool, data1::DataFrame, data2::DataFrame, data3::DataFrame, addheader::Bool = false)
