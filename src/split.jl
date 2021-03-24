@@ -139,7 +139,7 @@ second the rest (together 100%).
 - `selectionSize::Float64`: percentage, in what proportion data will be divided
 - `randomSeed::Int`: random seed for shuffling indeces
 """
-    function shuffle_indeces(
+function shuffle_indeces(
     n,
     selectionSize::Float64,
     randomSeed::Int,
@@ -208,9 +208,21 @@ function splits(dataset::MLImage, data,  indeces1, indeces2)
     return datadep.traindata(indeces1), datadep.traindata(indeces2)
 end
 
-function final_data(dataset::Tabular, returnArray::Bool, data::DataFrame...)
-    return ([df_or_array(returnArray, d) for d in data]...,)
+function final_data(data::DataFrame; addheader = false, returnArray = false)
+    if addheader
+        rename!(df ...)
+    end
+    if returnArray
+        ...
+        data = (x, y)
+    else
+        data = df
+    end
+    return data
 end
+
+postprocess(data::DataFrame...; kwargs...) = ([finaldata(d; kwargs...) for d in data]...,)
+
 
 function final_data(dataset::Tabular, returnArray::Bool, data1::DataFrame, data2::DataFrame, data3::DataFrame, addheader::Bool = false)
     if addheader
