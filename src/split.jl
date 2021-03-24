@@ -212,7 +212,11 @@ function final_data(dataset::Tabular, returnArray::Bool, data1::DataFrame, data2
     return df_or_array(returnArray, data1), df_or_array(returnArray, data2)
 end
 
-function final_data(dataset::Tabular, returnArray::Bool, data1::DataFrame, data2::DataFrame, data3::DataFrame)
+function final_data(dataset::Tabular, returnArray::Bool, data1::DataFrame, data2::DataFrame, data3::DataFrame, addheader::Bool = false)
+    if addheader
+        rename!(data1, head)
+    end
+
     return df_or_array(returnArray, data1), df_or_array(returnArray, data2), df_or_array(returnArray, data3)
 end
 
