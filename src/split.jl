@@ -46,7 +46,7 @@ function split_traintest(
         train, test = splits(dataset, train, indecesTrain, indecesTest)
     end
 
-    return final_data(dataset, returnArray, train, test)
+    return final_data(returnArray, train, test)
 end
 
 """
@@ -125,7 +125,7 @@ function split_trainvalidtest(
         valid, train = splits(dataset, train, indecesValid, indecesTrain)
     end
 
-    return final_data(dataset, returnArray, train, valid, test)
+    return final_data(returnArray, train, valid, test)
 end
 
 """
@@ -168,24 +168,13 @@ function has_traindata(dataset::DatasetName)
 end
 
 function get_data(dataset::Tabular, type::Symbol)
-    # path = path to files in a directory of given datadep
-    # in path files are in this order: test, train, valid (indeces 1, 2, 3),
-    # if test is missing then train and valid file is under index 1 and 2 respectively.
-    path = get_files(dataset)
-    if type == :train
-        if size(dataset)[3] > 0
-            return CSV.File(path[2], header = true) |> DataFrame
-        else
-            return CSV.File(path[1], header = true) |> DataFrame
-        end
-    elseif type == :test
-        return CSV.File(path[1], header = true) |> DataFrame
+    path = getPath(dataset)       # path to a directory of given datadep
+    if type == :test
+        return CSV.File(joinpath(path, "data-test.csv"), header = true) |> DataFrame
+    elseif type == :valid
+        return CSV.File(joinpath(path, "data-valid.csv"), header = true) |> DataFrame
     else
-        if size(dataset)[3] > 0
-            return CSV.File(path[3], header = true) |> DataFrame
-        else
-            return CSV.File(path[2], header = true) |> DataFrame
-        end
+        return CSV.File(joinpath(path, "data-train.csv"), header = true) |> DataFrame
     end
 end
 
@@ -208,14 +197,14 @@ function splits(dataset::MLImage, data,  indeces1, indeces2)
     return datadep.traindata(indeces1), datadep.traindata(indeces2)
 end
 
-function final_data(dataset::Tabular, returnArray::Bool, data1::DataFrame, data2::DataFrame)
+function final_data(returnArray::Bool, data1::DataFrame, data2::DataFrame)
     return df_or_array(returnArray, data1), df_or_array(returnArray, data2)
 end
 
-function final_data(dataset::Tabular, returnArray::Bool, data1::DataFrame, data2::DataFrame, data3::DataFrame)
+function final_data(returnArray::Bool, data1::DataFrame, data2::DataFrame, data3::DataFrame)
     return df_or_array(returnArray, data1), df_or_array(returnArray, data2), df_or_array(returnArray, data3)
 end
 
-function final_data(dataset::Image, returnArray::Bool, data...)
+function final_data(returnArray::Bool, data::Tuple...)
     return data
 end

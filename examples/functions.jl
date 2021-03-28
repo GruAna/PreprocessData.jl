@@ -2,7 +2,7 @@ using PreprocessData
 #to use dataset for functions, name_of_dataset.jl must be present in PreprocessData/src/datasets
 
 #split dataset into train and test data, also download dataset and create a simply preprocessed csv file
-#by default values are returned as `DataFrame`(returnDf=true)
+#by default values are returned as `DataFrame`(returnArray=true)
 #two DataFrames returned
 #targer values and attributes are not separated
 train, test = split_traintest(
@@ -11,13 +11,13 @@ train, test = split_traintest(
     randomSeed=123
 )
 #split dataset into train and test data
-#returnDf=false two `Tuple` variables are returned
+#returnArray=false two `Tuple` variables are returned
 #attributes - first index of tuple, labels - second index of tuple
 train, test = split_traintest(
     PreprocessData.Iris(),
     trainSize=0.7,
     randomSeed=123,
-    returnDf=false
+    returnArray=true
 )
 train_attributes = train[1]
 train_labels = train[2]
@@ -46,7 +46,7 @@ train, valid, test = split_trainvalidtest(
 #attributes - first index of tuple, labels - second index of tuple
 train, valid, test = split_trainvalidtest(
     PreprocessData.Iris(),
-    returnDf = false
+    returnArray = true
 )
 train_attributes = train[1]
 train_labels = train[2]

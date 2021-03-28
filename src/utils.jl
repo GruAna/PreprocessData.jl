@@ -1,5 +1,8 @@
 function getModule(::Image) end
 
+
+getPath(dataset) = @datadep_str name(dataset)
+
 """
     get_files(dataset)
 
