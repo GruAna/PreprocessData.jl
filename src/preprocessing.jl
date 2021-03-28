@@ -52,7 +52,7 @@ dataset.
 function preprocess(
     path::String,
     dataset::DatasetName;
-    header_names::Union{Vector{String}, Vector{Symbol}, Int}=0,
+    header::Bool = false,
     target_col="",
     categorical_cols::Union{Int, UnitRange{Int}, Array{Int,1}}=1:0,
     kwargs...
@@ -64,13 +64,14 @@ function preprocess(
 
     df = CSV.File(
         path,
-        header = header_names,
+        header = header,
         missingstrings = ["", "NA", "?", "*", "#DIV/0!"],
         truestrings = ["T", "t", "TRUE", "true", "y", "yes"],
         falsestrings = ["F", "f", "FALSE", "false", "n", "no"],
         kwargs...
         ) |> DataFrame
 
+    hds = names(df)
 
     for i in categorical_cols
         rename!(df, i => "Categ-"*names(df)[i])
@@ -79,7 +80,11 @@ function preprocess(
     if typeof(target_col) == String
         target_col = string("labels-", typeSplit)
     end
-    df = place_target(target_col, df)
+    df = place_target(target_col, hds, df)
+
+    if header
+        CSV.write(joinpath(path, "heades.csv"), hds)
+    end
 
     path_for_save = joinpath(dirname(path), string("data-",typeSplit,".",ext))
     CSV.write(path_for_save, df, delim=',', writeheader=true)
