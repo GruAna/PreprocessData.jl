@@ -48,7 +48,7 @@ function split_traintest(
         train, test = splits(dataset, train, indecesTrain, indecesTest)
     end
 
-    if header
+    if header && dataset isa Tabular
         hds = getheader(dataset)
         if isempty(hds)
             @info "No file with header (column names) found."
@@ -139,7 +139,7 @@ function split_trainvalidtest(
         valid, train = splits(dataset, train, indecesValid, indecesTrain)
     end
 
-    if header
+    if header && dataset isa Tabular
         hds = getheader(dataset)
         if isempty(hds)
             @info "No file with header (column names) found."

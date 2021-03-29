@@ -1,5 +1,6 @@
 function getModule(::Image) end
 name(dataset::DatasetName) = lowercasefirst(String(nameof(typeof(dataset))))
+name(dataset::MLImage) = String(nameof(typeof(dataset)))
 getpath(dataset::DatasetName) = @datadep_str name(dataset)
 headers(::Tabular) = ""
 
