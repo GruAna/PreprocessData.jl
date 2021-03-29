@@ -1,4 +1,3 @@
-name(dn::DatasetName) = lowercasefirst(String(nameof(typeof(dn))))
 function preprocess(::DatasetName) end
 extension(dn::DatasetName) = extension(dn)
 extension(::Tabular) = "csv"
@@ -29,8 +28,6 @@ function registering(dsName::DatasetName)
     ))
 end
 
-
-
 """
     preprocess(path, name, header_names, target_col, categorical_cols, kwargs...)
 
@@ -50,10 +47,9 @@ if not names `Column 1` are created.
 dataset.
 """
 function preprocess(
-    path::String,
+    path::AbstractString,
     dataset::DatasetName;
     header::Bool = false,
-    target_col="",
     categorical_cols::Union{Int, UnitRange{Int}, Array{Int,1}}=1:0,
     kwargs...
 )
@@ -64,33 +60,46 @@ function preprocess(
 
     df = CSV.File(
         path,
-        header = header,
+        header = false,
         missingstrings = ["", "NA", "?", "*", "#DIV/0!"],
         truestrings = ["T", "t", "TRUE", "true", "y", "yes"],
         falsestrings = ["F", "f", "FALSE", "false", "n", "no"],
         kwargs...
         ) |> DataFrame
 
-    hds = names(df)
-
     for i in categorical_cols
         rename!(df, i => "Categ-"*names(df)[i])
     end
 
-    if typeof(target_col) == String
-        target_col = string("labels-", typeSplit)
-    end
-    df = place_target(target_col, hds, df)
+    col = target(dataset)    #target column, either Int or String "labels"
 
+    if col isa String
+        col = string("labels-", typeSplit)
+    end
+
+    df = place_target(col, df)
+
+    # if header is true or if header is defined in $dataset.jl
+    # saves header to a file header.csv
+    # does not overwrite
     if header
-        CSV.write(joinpath(path, "heades.csv"), hds)
+        save_header(names(df), path)
+    elseif !isempty(headers(dataset))
+        save_header(headers(dataset), path)
     end
 
-    path_for_save = joinpath(dirname(path), string("data-",typeSplit,".",ext))
-    CSV.write(path_for_save, df, delim=',', writeheader=true)
+    pathForSave = joinpath(dirname(path), string("data-",typeSplit,".",ext))
+    CSV.write(pathForSave, df, delim=',', writeheader=true)
     rm(path)
 end
 
+function save_header(names::Vector{<:AbstractString}, path::AbstractString)
+    open(joinpath(dirname(path), "header.csv"),"w") do io
+        [write(io, d*"\n") for d in names]
+    end
+end
+
+#path to a file with labels
 function preprocess(path::String)
     typeSplit = _find_in(get_filename(path))
     mv(basename(path), string("labels-", typeSplit))
@@ -107,24 +116,25 @@ function _find_in(name::String)
 end
 
 
-function place_target(target_col::Int, df)
+function place_target(column::Int, df)
     last_col_index = ncol(df)
 
     #Move target column to last position if not there already.
-    if target_col > 0 && target_col < last_col_index
-        df.target = df[!, target_col]
-        df = df[!, 1:end ] .!= target_col
+    if column > 0 && column < last_col_index
+        df.Target = df[!, column]
+        df = df[!, Not(1)]
     end
 
-    if target_col == last_col_index
+    if column == last_col_index
         rename!(df, last_col_index => "Target")
     end
+
     return df
 end
 
+#labels are in a separate file, merge it with df with data
 function place_target(fileName::String, df)
     pathLabels = joinpath(pwd(), fileName)
-    println(pathLabels)
     dfLabels = CSV.File(
         pathLabels,
         header = ["Target"],
@@ -134,5 +144,6 @@ function place_target(fileName::String, df)
         ) |> DataFrame
     df = hcat(df, dfLabels)
     rm(pathLabels)
+
     return df
 end

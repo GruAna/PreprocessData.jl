@@ -19,9 +19,10 @@ end
 function preprocess(::Gisette)
     [
         path -> preprocess(path),
-        path -> preprocess(path, Gisette(), target_col="gisette_valid.labels"),
+        path -> preprocess(path, Gisette()),
         path -> preprocess(path),
-        path -> preprocess(path, Gisette(), target_col="gisette_train.labels")
+        path -> preprocess(path, Gisette())
     ]
 end
+target(::Gisette) = "labels"
 size(::Gisette) = (6000, 1000, 0)

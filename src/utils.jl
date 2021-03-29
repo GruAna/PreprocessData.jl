@@ -1,7 +1,40 @@
 function getModule(::Image) end
+name(dataset::DatasetName) = lowercasefirst(String(nameof(typeof(dataset))))
+getpath(dataset::DatasetName) = @datadep_str name(dataset)
+headers(::Tabular) = ""
 
+function target(dataset::Tabular)
+    path = joinpath(getpath(dataset), "data-train.", extension(dataset))
+    return ncol(CSV.File(path) |> DataFrame)
+end
 
-getPath(dataset) = @datadep_str name(dataset)
+function getheader(dataset::Tabular)
+    path = joinpath(getpath(dataset), "header.csv")
+    return load(path, dataset)
+end
+
+function load(path::String, dataset::Tabular)
+    if isfile(path)
+        df = CSV.File(path, header = false) |> DataFrame
+        targ = target(dataset)
+        header = Vector(df[:,1])
+        push!(header, header[targ])
+        header = header[Not(targ)]
+        return header
+    else
+        return ""
+    end
+end
+
+function new_header(header::Vector{String}, df::DataFrame...)
+    if isempty(header)
+        return nothing
+    end
+    for d in df
+        rename!(d, header)
+    end
+end
+
 
 """
     get_files(dataset)
@@ -35,8 +68,8 @@ end
 
     Based on returnArray return either a `DataFrame` (true) or an `Array` (false).
 """
-function df_or_array(returnArray::Bool, df::DataFrame)
-    return returnArray ? df_to_array(df) : df
+function df_or_array(df::DataFrame, toarray::Bool)
+    return toarray ? df_to_array(df) : df
 end
 
 
