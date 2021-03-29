@@ -2,35 +2,43 @@ using PreprocessData
 #to use dataset for functions, name_of_dataset.jl must be present in PreprocessData/src/datasets
 
 #split dataset into train and test data, also download dataset and create a simply preprocessed csv file
-#by default values are returned as `DataFrame`(returnArray=true)
+#by default values are returned as `DataFrame`(toarray=true)
 #two DataFrames returned
 #targer values and attributes are not separated
 train, test = split_traintest(
     PreprocessData.Iris(),
     trainSize=0.7,
-    randomSeed=123
+    seed=123
 )
 #split dataset into train and test data
-#returnArray=false two `Tuple` variables are returned
+#toarray=false two `Tuple` variables are returned
 #attributes - first index of tuple, labels - second index of tuple
 train, test = split_traintest(
     PreprocessData.Iris(),
     trainSize=0.7,
-    randomSeed=123,
-    returnArray=true
+    seed=123,
+    toarray=true
 )
 train_attributes = train[1]
 train_labels = train[2]
 test_attributes = test[1]
 test_labels = test[2]
 
+#load column names from file header.csv
+train, test = split_traintest(
+    PreprocessData.Wine(),
+    header = true
+)
+
 #split dataset into train, test data and data for validation
 #by default `DataFrame` is returned
+#load column names from function header (then file header.csv)
 train, valid, test = split_trainvalidtest(
     PreprocessData.Iris(),
     trainSize=0.7,
     validSize=0.15,
-    randomSeed=123,
+    seed=123,
+    header=true
 )
 
 #split dataset that already has valid and train data separated
@@ -38,7 +46,7 @@ train, valid, test = split_trainvalidtest(
     PreprocessData.Gisette(),
     trainSize=0.7,
     validSize=0.15,
-    randomSeed=123,
+    seed=123,
 )
 
 #split dataset into train, test data and data for validation
@@ -46,7 +54,7 @@ train, valid, test = split_trainvalidtest(
 #attributes - first index of tuple, labels - second index of tuple
 train, valid, test = split_trainvalidtest(
     PreprocessData.Iris(),
-    returnArray = true
+    toarray = true
 )
 train_attributes = train[1]
 train_labels = train[2]
