@@ -29,20 +29,19 @@ function registering(dsName::DatasetName)
 end
 
 """
-    preprocess(path, name, header_names, target_col, categorical_cols, kwargs...)
+    preprocess(path, name, header_names, categorical_cols, kwargs...)
 
 Create csv file containing data from dataset in "standard" format.
 
 The format can be described as - columns represents attributes, rows instances,
 attributes in a row are separated by comma. First row of file is header
-Last column contains target values and is named Target, if `target_col` is provided
-and has value within bounds. `categorical_cols` if provided prepend "Categ-"
+Last column contains target values and is named Target.`categorical_cols` if provided prepend "Categ-"
 at the beginning of column name.
 
 #Arguments
-- `header::Bool`: false (default) no header, names `Column 1` are created.
+- `header::Bool=false`: false no header, names `Column 1` are created.
 True first row of file contains column names.
-- `categorical_cols`: range of columns with categorical values (default empty).
+- `categorical_cols=0:1`: range of columns with categorical values.
 - `kwargs...`: keyword arguments that are possible in `CSV.File` function.
 """
 function preprocess(

@@ -7,9 +7,11 @@ Split dataset from file to train and test data.
 - `dataset::DatasetName`: dsName (type) of the datset for split
 
 # Keywords
-- `trainSize::Float64 = 0.8`: percentage of train data size
-- `seed::Int = 12345`: random seed for shuffling rows of the dataset
-- `toarray::Bool = true`: if true returns `DataFrame`, else returns `Tuple` of arrays
+- `trainSize::Float64=0.8`: percentage of train data size
+- `seed::Int=12345`: random seed for shuffling rows of the dataset
+- `toarray::Bool=true`: if true returns `DataFrame`, else returns `Tuple` of arrays
+- `header::Bool=false`: if true returnes `DataFrame` has column names belonging to the
+dataset (it they are found), else default column naming is returned.
 
 Return `Tuple{DataFrame}` (3 DataFrames - first with train data, second with test data,
 target values and attributes are together in the `DataFrame`) or return `Tuple{Tuple{Array})`
@@ -69,10 +71,12 @@ Split dataset from file to train, valid and test data.
 -`dataset::DatasetdsName `: dsName of the datset for split
 
 # Keywords
-- `trainSize::Float64 = 0.8`: percentage of train data size
-- `validSize::Float64 = 0.2`: percentage of validation data size, selected from train data
-- `seed::Int = 12345`: random seed for shuffling rows of the dataset
-- `toarray::Bool = true`: if true returns `DataFrame`, else returns `Tuple` of arrays
+- `trainSize::Float64=0.8`: percentage of train data size
+- `validSize::Float64=0.2`: percentage of validation data size, selected from train data
+- `seed::Int=12345`: random seed for shuffling rows of the dataset
+- `toarray::Bool=true`: if true returns `DataFrame`, else returns `Tuple` of arrays
+- `header::Bool=false`: if true returnes `DataFrame` has column names belonging to the
+dataset (it they are found), else default column naming is returned.
 
 Return `Tuple{DataFrame}` or `Tuple{Tuple{Array}}`. Return splitted data in order: train, valid, test.
 If `toarray = true` return 3 `DataFrames`, else return 3 tuples of arrays (first array
@@ -152,13 +156,13 @@ function split_trainvalidtest(
 end
 
 """
-    _shuffle_indeces(data, size, seed)
+    _shuffle_indeces(n, size, seed)
 
 Return two arrays containing indeces. First contains indeces with selecetion size,
 second the rest (together 100%).
 
 # Arguments
-- data`:`Array`, `DataFrame`
+- `n::Int`: number of indeces.
 - `size::Float64`: percentage, in what proportion data will be divided
 - `seed::Int`: random seed for shuffling indeces
 """
@@ -183,50 +187,4 @@ function has_traindata(dataset::DatasetName)
     else
         return false
     end
-end
-
-function getdata(dataset::Tabular, type::Symbol)
-    path = getpath(dataset)       # path to a directory of given datadep
-    if type == :test
-        return CSV.File(joinpath(path, "data-test.csv"), header = true) |> DataFrame
-    elseif type == :valid
-        return CSV.File(joinpath(path, "data-valid.csv"), header = true) |> DataFrame
-    else
-        return CSV.File(joinpath(path, "data-train.csv"), header = true) |> DataFrame
-    end
-end
-
-function getdata(dataset::MLImage, type::Symbol)
-    datadep = getModule(dataset)
-    if type == :train
-        return datadep.traindata()
-    elseif type == :test
-        return datadep.testdata()
-    end
-end
-
-function splits(dataset::Tabular, data, indeces1, indeces2)
-    return data[indeces1,:], data[indeces2,:]
-end
-
-function splits(dataset::MLImage, data,  indeces1, indeces2)
-    datadep = getModule(dataset)
-    return datadep.traindata(indeces1), datadep.traindata(indeces2)
-end
-
-function final_data(toarray::Bool, data1::DataFrame, data2::DataFrame)
-    return df_or_array(data1, toarray), df_or_array(data2, toarray)
-end
-
-function final_data(
-    toarray::Bool,
-    data1::DataFrame,
-    data2::DataFrame,
-    data3::DataFrame,
-)
-    return df_or_array(data1, toarray), df_or_array(data2, toarray), df_or_array(data3, toarray)
-end
-
-function final_data(toarray::Bool, data::Tuple..., )
-    return data
 end

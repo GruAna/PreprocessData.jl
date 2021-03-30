@@ -11,6 +11,8 @@ const DATASET_DIR_IMG = joinpath(@__DIR__, "datasets/image")
 
 include("types.jl")
 include("utils.jl")
+include("tabular.jl")
+include("image.jl")
 include("preprocessing.jl")
 include("split.jl")
 
