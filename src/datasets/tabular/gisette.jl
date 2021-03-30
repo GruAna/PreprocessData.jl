@@ -18,9 +18,9 @@ function checksum(::Gisette)
 end
 function preprocess(::Gisette)
     [
-        path -> preprocess(path),
+        path -> preprocess(path, :labels),
         path -> preprocess(path, Gisette()),
-        path -> preprocess(path),
+        path -> preprocess(path, :labels),
         path -> preprocess(path, Gisette())
     ]
 end

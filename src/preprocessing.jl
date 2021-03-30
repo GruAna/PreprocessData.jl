@@ -40,11 +40,10 @@ and has value within bounds. `categorical_cols` if provided prepend "Categ-"
 at the beginning of column name.
 
 #Arguments
-- `header_names`: name of columns can be passed in `header_names`,
-if not names `Column 1` are created.
-- `target_col`: either `Int` containing index of target column in dataset, or name
-(`String`) of file with only labels for the dataset. File must be in the same directory as
-dataset.
+- `header::Bool`: false (default) no header, names `Column 1` are created.
+True first row of file contains column names.
+- `categorical_cols`: range of columns with categorical values (default empty).
+- `kwargs...`: keyword arguments that are possible in `CSV.File` function.
 """
 function preprocess(
     path::AbstractString,
@@ -56,7 +55,7 @@ function preprocess(
     name = get_filename(path)
     ext = extension(dataset)
 
-    typeSplit = _find_in(name)
+    typeSplit = find_in(name)
 
     df = CSV.File(
         path,
@@ -99,13 +98,45 @@ function save_header(names::Vector{<:AbstractString}, path::AbstractString)
     end
 end
 
-#path to a file with labels
-function preprocess(path::String)
-    typeSplit = _find_in(get_filename(path))
-    mv(basename(path), string("labels-", typeSplit))
+"""
+    preprocess(path::String, type::Symbol)
+
+Renames downloaded file based on type.
+
+If type is `:labels` or `:target` (used for file containing labels) file is renamed.
+For labels filename has format labels-typeSplit.csv. For typeSplit see `find_in`.
+If type is `:header` or `:headers` (used for file containing header) file is renamed.
+For header filename has format header.csv.
+"""
+function preprocess(path::String, type::Symbol)
+    if type == :labels || type == :target
+        typeSplit = find_in(get_filename(path))
+        mv(basename(path), string("labels-", typeSplit))
+    elseif type == :header || type == :headers
+        mv(basename(path), string("header.csv"))
+    else
+        throw(ArgumentError("Unknown type for preprocess."))
+    end
 end
 
-function _find_in(name::String)
+"""
+    find_in(name::String)
+
+Searches for strings train, test, valid in given name.
+
+If one of the substrings is present then returns it.
+If none is present then returns "train".
+
+#Examples
+```julia-repl
+julia> PreprocessData.find_in("name-test.csv")
+"test"
+
+julia> PreprocessData.find_in("name.csv")
+"train"
+```
+"""
+function find_in(name::String)
     if occursin("train", name) || (!occursin("valid", name) && !occursin("test", name))
         return "train"
     elseif occursin("valid", name)
@@ -115,8 +146,12 @@ function _find_in(name::String)
     end
 end
 
+"""
+    place_target(column::Int, df::DataFrame)
 
-function place_target(column::Int, df)
+Moves column from its position to last position in `DataFrame` df.
+"""
+function place_target(column::Int, df::DataFrame)
     last_col_index = ncol(df)
 
     #Move target column to last position if not there already.
@@ -132,8 +167,12 @@ function place_target(column::Int, df)
     return df
 end
 
-#labels are in a separate file, merge it with df with data
-function place_target(fileName::String, df)
+"""
+    place_target(fileName::String, df::DataFrame)
+
+Pushes column with labels from a file to last position in `DataFrame` df.
+"""
+function place_target(fileName::String, df::DataFrame)
     pathLabels = joinpath(pwd(), fileName)
     dfLabels = CSV.File(
         pathLabels,
