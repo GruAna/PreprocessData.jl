@@ -29,7 +29,18 @@ function registering(dsName::DatasetName)
 end
 
 """
-    preprocess(path, name, header_names, categorical_cols, kwargs...)
+    extract(path)
+
+Extracts file using `DataDeps.unpack` function and returns path to the new extracted file.
+"""
+function extract(path)
+    newPath = splitext(path)[1]
+    DataDeps.unpack(path)
+    return newPath
+end
+
+"""
+    preprocess(path, name, header, categorical_cols, kwargs...)
 
 Create csv file containing data from dataset in "standard" format.
 
@@ -81,7 +92,12 @@ function preprocess(
     # saves header to a file header.csv
     # does not overwrite
     if header
+        hds = String[]
+        for i in 1:ncol(df)
+            push!(hds, "Column $i")
+        end
         save_header(names(df), path)
+        rename!(df, hds)
     elseif !isempty(headers(dataset))
         save_header(headers(dataset), path)
     end
