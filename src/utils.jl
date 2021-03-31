@@ -2,12 +2,12 @@ name(dataset::DatasetName) = lowercasefirst(String(nameof(typeof(dataset))))
 getpath(dataset::DatasetName) = @datadep_str name(dataset)
 
 """
-    get_filename(path)
+    getfilename(path)
 
 Get name of the file without filename extension.
 `path` must include filename.
 """
-function get_filename(path)
+function getfilename(path)
     filename = basename(path)
     return splitext(filename)[1]
 end

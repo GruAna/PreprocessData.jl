@@ -51,14 +51,14 @@ function preprocess(
     categorical_cols::Union{Int, UnitRange{Int}, Array{Int,1}}=1:0,
     kwargs...
 )
-    name = get_filename(path)
+    name = getfilename(path)
     ext = extension(dataset)
 
     typeSplit = find_in(name)
 
     df = CSV.File(
         path,
-        header = false,
+        header = header,
         missingstrings = ["", "NA", "?", "*", "#DIV/0!"],
         truestrings = ["T", "t", "TRUE", "true", "y", "yes"],
         falsestrings = ["F", "f", "FALSE", "false", "n", "no"],
@@ -109,7 +109,7 @@ For header filename has format header.csv.
 """
 function preprocess(path::String, type::Symbol)
     if type == :labels || type == :target
-        typeSplit = find_in(get_filename(path))
+        typeSplit = find_in(getfilename(path))
         mv(basename(path), string("labels-", typeSplit))
     elseif type == :header || type == :headers
         mv(basename(path), string("header.csv"))
