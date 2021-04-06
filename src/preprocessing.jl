@@ -118,13 +118,13 @@ end
 
 Renames downloaded file based on type.
 
-If type is `:labels` or `:target` (used for file containing labels) file is renamed.
+If type is `:labels`,`label` or `:target` (used for file containing labels) file is renamed.
 For labels filename has format labels-typeSplit.csv. For typeSplit see `find_in`.
 If type is `:header` or `:headers` (used for file containing header) file is renamed.
 For header filename has format header.csv.
 """
 function preprocess(path::String, type::Symbol)
-    if type == :labels || type == :target
+    if type == :labels || type == :label || type == :target
         typeSplit = find_in(getfilename(path))
         mv(basename(path), string("labels-", typeSplit))
     elseif type == :header || type == :headers

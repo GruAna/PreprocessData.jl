@@ -5,6 +5,7 @@ using MLDatasets
 
 export call
 export split_traintest, split_trainvalidtest
+export getdata
 
 const DATASET_DIR_TAB = joinpath(@__DIR__, "datasets/tabular")
 const DATASET_DIR_IMG = joinpath(@__DIR__, "datasets/image")
