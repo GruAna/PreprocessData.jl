@@ -77,7 +77,7 @@ function preprocess(
         ) |> DataFrame
 
     for i in categorical_cols
-        rename!(df, i => "Categ-"*names(df)[i])
+        rename!(df, i => names(df)[i]*"-Cat")
     end
 
     col = target(dataset)    #target column, either Int or String "labels"
@@ -172,10 +172,8 @@ function place_target(column::Int, df::DataFrame)
     #Move target column to last position if not there already.
     if column > 0 && column < last_col_index
         df.Target = df[!, column]
-        df = df[!, Not(1)]
-    end
-
-    if column == last_col_index
+        df = df[!, Not(column)]
+    else
         rename!(df, last_col_index => "Target")
     end
 

@@ -3,13 +3,10 @@
 # Default header for Tabular datasets is empty String.
 headers(::Tabular) = ""
 
-# Default target for Tabular datasets is last column. Calculated as number of columns of
-# DataFrame with train data.
+# Default target for Tabular datasets is last column. It can be different number for every
+# dataset, so we mark it as zero and remember it for later use.
 # target should be always specified manually in dataset.jl file
-function target(dataset::Tabular)
-    path = joinpath(getpath(dataset), "data-train.", extension(dataset))
-    return ncol(CSV.File(path) |> DataFrame)
-end
+target(dataset::Tabular) = 0
 
 """
     getheader(dataset::Tabular)
@@ -32,9 +29,13 @@ function load(path::String, dataset::Tabular)
     if isfile(path)
         df = CSV.File(path, header = false) |> DataFrame
         targ = target(dataset)
-        header = Vector(df[:,1])
-        push!(header, header[targ])
-        header = header[Not(targ)]
+        header = Array(df[:,1])
+
+        if targ != 0   # if targ == 0 it was assumed that it is the last col
+            push!(header, header[targ])
+            header = header[Not(targ)]
+        end
+
         return header
     else
         return ""
