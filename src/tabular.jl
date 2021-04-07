@@ -64,7 +64,12 @@ end
 
 Returns data from dataset. `type` is either `:train`, `:test.` or `:valid`.
 """
-function getdata(dataset::Tabular, type::Symbol=:train; header::Bool = false)
+function getdata(
+    dataset::Tabular,
+    type::Symbol=:train;
+    toarray::Bool=false,
+    header::Bool=false,
+    )
     path = getpath(dataset)       # path to a directory of given datadep
 
     if type == :test
@@ -76,16 +81,7 @@ function getdata(dataset::Tabular, type::Symbol=:train; header::Bool = false)
     end
     df = CSV.File(joinpath(path, file), header = true) |> DataFrame
 
-    if header
-        hds = getheader(dataset)
-        if isempty(hds)
-            @info "No file with header (column names) found."
-        else
-            new_header(hds, df)
-        end
-    end
-
-    return df
+    return postprocess(dataset, df, toarray, header)
 end
 
 """
@@ -120,4 +116,45 @@ function final_data(
     data3::DataFrame,
 )
     return df_or_array(data1, toarray), df_or_array(data2, toarray), df_or_array(data3, toarray)
+end
+
+function postprocess(
+    dataset::Tabular,
+    df::DataFrame,
+    toarray::Bool=false,
+    header::Bool=false,
+    )
+    header && changeheader(dataset, df)
+
+    return df_or_array(df, toarray)
+end
+
+function postprocess(
+    d::Tabular,
+    data1::DataFrame,
+    data2::DataFrame,
+    toarray::Bool=false,
+    header::Bool=false,
+    )
+    return postprocess(d, data1,toarray,header), postprocess(d, data2,toarray,header)
+end
+
+function postprocess(
+    d::Tabular,
+    data1::DataFrame,
+    data2::DataFrame,
+    data3::DataFrame,
+    toarray::Bool=false,
+    header::Bool=false,
+    )
+    return postprocess(d, data1,toarray,header), postprocess(d, data2,toarray,header), postprocess(d, data3,toarray,header)
+end
+
+function changeheader(dataset::Tabular, df::DataFrame)
+    hds = getheader(dataset)
+    if isempty(hds)
+        @info "No file with header (column names) found."
+    else
+        new_header(hds, df)
+    end
 end

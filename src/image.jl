@@ -8,7 +8,7 @@ name(dataset::MLImage) = String(nameof(typeof(dataset)))
 
 Returns data from dataset. `type` is either `:train` or `:test.`
 """
-function getdata(dataset::MLImage, type::Symbol=:train; header::Bool=false)
+function getdata(dataset::MLImage, type::Symbol=:train)
     datadep = getModule(dataset)
     if type == :train
         return datadep.traindata()
@@ -35,5 +35,9 @@ end
 Returns image data.
 """
 function final_data(toarray::Bool, data::Tuple...,)
+    return data
+end
+
+function postprocess(dataset::Image, data...; kwargs...)
     return data
 end

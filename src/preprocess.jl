@@ -76,19 +76,11 @@ function preprocess(
     # does not overwrite
     if header
         save_header(names(df), path)
-        hds = String[]
-        for i in 1:ncol(df)
-            push!(hds, "Column $i")
-        end
-        rename!(df, hds)
     elseif !isempty(headers(dataset))
         save_header(headers(dataset), path)
     end
 
-    for i in categorical_cols
-        rename!(df, i => names(df)[i]*"-Cat")
-    end
-
+    # place target column
     col = target(dataset)    #target column, either Int or String "labels"
 
     if col isa String
@@ -96,6 +88,10 @@ function preprocess(
     end
 
     df = place_target(col, df)
+
+    for i in categorical_cols
+        rename!(df, i => names(df)[i]*"-Cat")
+    end
 
     ext = extension(dataset)
     name = getfilename(path)
@@ -110,6 +106,52 @@ function save_header(names::Vector{<:AbstractString}, path::AbstractString)
     open(joinpath(dirname(path), "header.csv"),"w") do io
         [write(io, d*"\n") for d in names]
     end
+end
+
+function rename_cols(df::DataFrame)
+    return rename!(df, collect(1:(ncol(df)-1)) .=> ["Column $i" for i in 1:ncol(df)-1])
+end
+
+
+"""
+    place_target(column::Int, df::DataFrame)
+
+Moves column from its position to last position in `DataFrame` df.
+"""
+function place_target(column::Int, df::DataFrame)
+    lastColIndex = ncol(df)
+
+    if column > 0 || column < lastColIndex
+        #Move target column to last position
+        df.Target = df[!, column]
+        df = df[!, Not(column)]
+        # rename columns after target column was moved, don't if col was already the last column
+        rename_cols(df)
+    else
+        rename!(df, lastColIndex => "Target")
+    end
+
+    return df
+end
+
+"""
+    place_target(fileName::String, df::DataFrame)
+
+Pushes column with labels from a file to last position in `DataFrame` df.
+"""
+function place_target(fileName::String, df::DataFrame)
+    pathLabels = joinpath(pwd(), fileName)
+    dfLabels = CSV.File(
+        pathLabels,
+        header = ["Target"],
+        missingstrings = ["", "NA", "?", "*", "#DIV/0!"],
+        truestrings = ["T", "t", "TRUE", "true", "y", "yes"],
+        falsestrings = ["F", "f", "FALSE", "false", "n", "no"],
+        ) |> DataFrame
+    df = hcat(df, dfLabels)
+    rm(pathLabels)
+
+    return df
 end
 
 """
@@ -158,43 +200,4 @@ function find_in(name::String)
     elseif occursin("test", name)
         return "test"
     end
-end
-
-"""
-    place_target(column::Int, df::DataFrame)
-
-Moves column from its position to last position in `DataFrame` df.
-"""
-function place_target(column::Int, df::DataFrame)
-    last_col_index = ncol(df)
-
-    #Move target column to last position if not there already.
-    if column > 0 && column < last_col_index
-        df.Target = df[!, column]
-        df = df[!, Not(column)]
-    else
-        rename!(df, last_col_index => "Target")
-    end
-
-    return df
-end
-
-"""
-    place_target(fileName::String, df::DataFrame)
-
-Pushes column with labels from a file to last position in `DataFrame` df.
-"""
-function place_target(fileName::String, df::DataFrame)
-    pathLabels = joinpath(pwd(), fileName)
-    dfLabels = CSV.File(
-        pathLabels,
-        header = ["Target"],
-        missingstrings = ["", "NA", "?", "*", "#DIV/0!"],
-        truestrings = ["T", "t", "TRUE", "true", "y", "yes"],
-        falsestrings = ["F", "f", "FALSE", "false", "n", "no"],
-        ) |> DataFrame
-    df = hcat(df, dfLabels)
-    rm(pathLabels)
-
-    return df
 end

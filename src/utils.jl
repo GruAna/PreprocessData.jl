@@ -58,5 +58,7 @@ function listdatasets(which=:all)
         printproblemtypes(Classification)
     elseif which == :regression
         printproblemtypes(Regression)
+    else
+        error("Bad identifier.")
     end
 end
