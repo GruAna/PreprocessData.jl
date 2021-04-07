@@ -8,7 +8,7 @@ name(dataset::MLImage) = String(nameof(typeof(dataset)))
 
 Returns data from dataset. `type` is either `:train` or `:test.`
 """
-function getdata(dataset::MLImage, type::Symbol)
+function getdata(dataset::MLImage, type::Symbol=:train; header::Bool=false)
     datadep = getModule(dataset)
     if type == :train
         return datadep.traindata()

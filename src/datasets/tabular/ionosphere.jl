@@ -4,3 +4,4 @@ checksum(::Ionosphere) = "46d52186b84e20be52918adb93e8fb9926b34795ff7504c24350ae
 preprocess(::Ionosphere) = path -> preprocess(path, Ionosphere())
 target(::Ionosphere) = 35
 size(::Ionosphere) = (351, 0, 0)
+problem(::Ionosphere) = Classification

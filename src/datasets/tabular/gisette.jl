@@ -26,3 +26,4 @@ function preprocess(::Gisette)
 end
 target(::Gisette) = "labels"
 size(::Gisette) = (6000, 1000, 0)
+problem(::Gisette) = Classification

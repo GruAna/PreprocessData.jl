@@ -4,3 +4,4 @@ checksum(::Carevaluation) = "b703a9ac69f11e64ce8c223c0a40de4d2e9d769f7fb20be5f8f
 preprocess(::Carevaluation) = path -> preprocess(path, Carevaluation(), categorical_cols = 1:6 )
 target(::Carevaluation) = 7
 size(::Carevaluation) = (1728, 0, 0)
+problem(::Carevaluation) = Classification

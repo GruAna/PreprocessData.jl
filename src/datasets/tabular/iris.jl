@@ -5,3 +5,4 @@ preprocess(::Iris) = path -> preprocess(path, Iris())
 target(::Iris) = 5
 size(::Iris) = (150, 0, 0)
 headers(::Iris) = ["sepal length", "sepal width", "petal length", "petal width", "class"]
+problem(::Iris) = Classification

@@ -2,8 +2,8 @@ module PreprocessData
 
 using DataDeps, DataFrames, CSV, InteractiveUtils, Random
 using MLDatasets
+using InteractiveUtils: subtypes
 
-export call
 export split_traintest, split_trainvalidtest
 export getdata
 

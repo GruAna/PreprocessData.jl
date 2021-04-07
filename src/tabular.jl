@@ -15,7 +15,7 @@ Returns header found in header.csv in folder .../datadeps/dataset. See `load`.
 """
 function getheader(dataset::Tabular)
     path = joinpath(getpath(dataset), "header.csv")
-    return load(path, dataset)
+    return loadheader(path, dataset)
 end
 
 """
@@ -25,7 +25,7 @@ Returns header as `Vector{String}` if there is a header file in path, else retur
 
 For good functionality - in header file each column name must be on a new line.
 """
-function load(path::String, dataset::Tabular)
+function loadheader(path::String, dataset::Tabular)
     if isfile(path)
         df = CSV.File(path, header = false) |> DataFrame
         targ = target(dataset)
@@ -64,15 +64,28 @@ end
 
 Returns data from dataset. `type` is either `:train`, `:test.` or `:valid`.
 """
-function getdata(dataset::Tabular, type::Symbol)
+function getdata(dataset::Tabular, type::Symbol=:train; header::Bool = false)
     path = getpath(dataset)       # path to a directory of given datadep
+
     if type == :test
-        return CSV.File(joinpath(path, "data-test.csv"), header = true) |> DataFrame
+        file = "data-test.csv"
     elseif type == :valid
-        return CSV.File(joinpath(path, "data-valid.csv"), header = true) |> DataFrame
+        file = "data-valid.csv"
     else
-        return CSV.File(joinpath(path, "data-train.csv"), header = true) |> DataFrame
+        file = "data-train.csv"
     end
+    df = CSV.File(joinpath(path, file), header = true) |> DataFrame
+
+    if header
+        hds = getheader(dataset)
+        if isempty(hds)
+            @info "No file with header (column names) found."
+        else
+            new_header(hds, df)
+        end
+    end
+
+    return df
 end
 
 """

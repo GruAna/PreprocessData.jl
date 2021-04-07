@@ -4,3 +4,4 @@ checksum(::Nuclear) = "0283f0f95a2df8e66ea40035483b6dcecb11fd856823f190ea943d774
 preprocess(::Nuclear) = path -> preprocess(myunpack(path), Nuclear(), header = true)
 target(::Nuclear) = 11
 size(::Nuclear) = (32, 0, 0)
+problem(::Nuclear) = Classification

@@ -4,3 +4,4 @@ checksum(::Wine) = "6be6b1203f3d51df0b553a70e57b8a723cd405683958204f96d23d7cd6ae
 preprocess(::Wine) = path -> preprocess(path, Wine())
 target(::Wine) = 1
 size(::Wine) = (178, 0, 0)
+problem(::Wine) = Classification

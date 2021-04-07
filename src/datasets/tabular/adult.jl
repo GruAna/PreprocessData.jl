@@ -4,3 +4,4 @@ checksum(::Adult) = "5b00264637dbfec36bdeaab5676b0b309ff9eb788d63554ca0a249491c8
 preprocess(::Adult) = path -> preprocess(path, Adult(), categorical_cols=[2; 4; 6:10; 14] )
 target(::Adult) = 15
 size(::Adult) = (32561, 0, 0)
+problem(::Adult) = Classification
