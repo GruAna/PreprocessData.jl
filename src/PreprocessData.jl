@@ -5,7 +5,7 @@ using MLDatasets
 using InteractiveUtils: subtypes
 
 export split_traintest, split_trainvalidtest
-export getdata
+export load
 export listdatasets
 
 const DATASET_DIR_TAB = joinpath(@__DIR__, "datasets/tabular")

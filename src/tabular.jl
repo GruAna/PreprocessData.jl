@@ -66,9 +66,7 @@ Returns data from dataset. `type` is either `:train`, `:test.` or `:valid`.
 """
 function getdata(
     dataset::Tabular,
-    type::Symbol=:train;
-    toarray::Bool=false,
-    header::Bool=false,
+    type::Symbol=:train,
     )
     path = getpath(dataset)       # path to a directory of given datadep
 
@@ -80,6 +78,19 @@ function getdata(
         file = "data-train.csv"
     end
     df = CSV.File(joinpath(path, file), header = true) |> DataFrame
+
+    return df
+end
+
+function load(
+    dataset::Tabular,
+    type::Symbol=:train;
+    toarray::Bool=false,
+    header::Bool=false,
+    )
+    path = getpath(dataset)       # path to a directory of given datadep
+
+    df = getdata(dataset, type)
 
     return postprocess(dataset, df, toarray, header)
 end
@@ -94,37 +105,25 @@ function splits(dataset::Tabular, data, indeces1, indeces2)
 end
 
 """
-    final_data(toarray::Bool, data1::DataFrame, data2::DataFrame)
+    postprocess(dataset::Tabular, df::DataFrame,toarray::Bool, header::Bool)
 
-Returns data of `Tabular` dataset, either as a tuple of two tuples (teach has a data array
-and labels vector) or as three `DataFrames`.
+Returns data of `Tabular` dataset.
+
+#Arguments
+toarray::Bool=false: Returns data either as a tuple of two tuples (each has a data array
+and labels vector) or as `DataFrame`.
+header::Bool=false: If true, searches for header file for the dataset and renames columns
+according to the file, else nothing happens.
+
+If `toarray==true` and `header==true` nothing happens.
 """
-function final_data(toarray::Bool, data1::DataFrame, data2::DataFrame)
-    return df_or_array(data1, toarray), df_or_array(data2, toarray)
-end
-
-"""
-    final_data(toarray::Bool, data1::DataFrame, data2::DataFrame, data3::DataFrame)
-
-Returns data of `Tabular` dataset, either as a tuple of three tuples (teach has a data array
-and labels vector) or as three `DataFrames`.
-"""
-function final_data(
-    toarray::Bool,
-    data1::DataFrame,
-    data2::DataFrame,
-    data3::DataFrame,
-)
-    return df_or_array(data1, toarray), df_or_array(data2, toarray), df_or_array(data3, toarray)
-end
-
 function postprocess(
     dataset::Tabular,
     df::DataFrame,
     toarray::Bool=false,
     header::Bool=false,
     )
-    header && changeheader(dataset, df)
+    header && !toarray && changeheader(dataset, df)
 
     return df_or_array(df, toarray)
 end

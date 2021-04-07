@@ -30,13 +30,10 @@ function splits(dataset::MLImage, data,  indeces1, indeces2)
 end
 
 """
-    final_data(toarray::Bool, data::Tuple...)
+    postprocess(dataset::Image, data...; kwargs...)
 
-Returns image data.
+Returns image data. Kwargs are empty.
 """
-function final_data(toarray::Bool, data::Tuple...,)
-    return data
-end
 
 function postprocess(dataset::Image, data...; kwargs...)
     return data
