@@ -40,7 +40,7 @@ function extract(path)
 end
 
 """
-    preprocess(path, name, header, categorical_cols, kwargs...)
+    preprocess(path, dataset, header, categorical_cols, kwargs...)
 
 Create csv file containing data from dataset in "standard" format.
 
@@ -62,11 +62,6 @@ function preprocess(
     categorical_cols::Union{Int, UnitRange{Int}, Array{Int,1}}=1:0,
     kwargs...
 )
-    name = getfilename(path)
-    ext = extension(dataset)
-
-    typeSplit = find_in(name)
-
     df = CSV.File(
         path,
         header = header,
@@ -75,6 +70,20 @@ function preprocess(
         falsestrings = ["F", "f", "FALSE", "false", "n", "no"],
         kwargs...
         ) |> DataFrame
+
+    # if header is true or if header is defined in $dataset.jl
+    # saves header to a file header.csv
+    # does not overwrite
+    if header
+        save_header(names(df), path)
+        hds = String[]
+        for i in 1:ncol(df)
+            push!(hds, "Column $i")
+        end
+        rename!(df, hds)
+    elseif !isempty(headers(dataset))
+        save_header(headers(dataset), path)
+    end
 
     for i in categorical_cols
         rename!(df, i => names(df)[i]*"-Cat")
@@ -88,19 +97,9 @@ function preprocess(
 
     df = place_target(col, df)
 
-    # if header is true or if header is defined in $dataset.jl
-    # saves header to a file header.csv
-    # does not overwrite
-    if header
-        hds = String[]
-        for i in 1:ncol(df)
-            push!(hds, "Column $i")
-        end
-        save_header(names(df), path)
-        rename!(df, hds)
-    elseif !isempty(headers(dataset))
-        save_header(headers(dataset), path)
-    end
+    ext = extension(dataset)
+    name = getfilename(path)
+    typeSplit = find_in(name)
 
     pathForSave = joinpath(dirname(path), string("data-",typeSplit,".",ext))
     CSV.write(pathForSave, df, delim=',', writeheader=true)
