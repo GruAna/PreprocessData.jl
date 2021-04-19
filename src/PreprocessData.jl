@@ -6,7 +6,7 @@ using InteractiveUtils: subtypes
 
 export split_traintest, split_trainvalidtest
 export load
-export listdatasets
+export listdatasets, info
 
 const DATASET_DIR_TAB = joinpath(@__DIR__, "datasets/tabular")
 const DATASET_DIR_IMG = joinpath(@__DIR__, "datasets/image")
@@ -18,8 +18,10 @@ include("image.jl")
 include("preprocess.jl")
 include("split.jl")
 
-include.(readdir(DATASET_DIR_TAB; join = true))
-include.(readdir(DATASET_DIR_IMG; join = true))
+scriptfiles = [readdir(DATASET_DIR_TAB; join = true); readdir(DATASET_DIR_IMG; join = true)]
+for s in scriptfiles
+    splitext(s)[2] == ".jl" && include(s)
+end
 
 function __init__()
     for T in InteractiveUtils.subtypes(Tabular)

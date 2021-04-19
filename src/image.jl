@@ -19,6 +19,8 @@ function getdata(dataset::MLImage, type::Symbol=:train)
     end
 end
 
+load(dataset::Image, type::Symbol=:train) = getdata(dataset, type)
+
 """
     splits(dataset::MLImage, data, indeces1, indeces2)
 
