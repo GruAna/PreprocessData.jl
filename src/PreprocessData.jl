@@ -17,6 +17,7 @@ include("tabular.jl")
 include("image.jl")
 include("preprocess.jl")
 include("split.jl")
+include("infos.jl")
 
 scriptfiles = [readdir(DATASET_DIR_TAB; join = true); readdir(DATASET_DIR_IMG; join = true)]
 for s in scriptfiles

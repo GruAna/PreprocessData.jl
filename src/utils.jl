@@ -30,68 +30,15 @@ function df_to_array(df::DataFrame)
     return Array(df[:,1:end-1]), df[:,end]
 end
 
-function printsubtypes(T::Type, level::Int = 0, indent::Int = 0)
-    colors = [:light_magenta; :light_blue; :light_green; :light_yellow; :white]
-    name = String(nameof(T))
-    printstyled(repeat("   ", indent), name,"\n"; color=colors[level+1])
-    printsubtypes.(subtypes(T), level + 1, indent + 1)
-    return
-end
+"""
+    isdownloaded(dataset::DatasetName)
 
-function printproblemtypes(P::Type)
-    datasets = subtypes(Tabular)
-    printstyled(String(nameof(P))," datatsets\n", bold=true)
-
-    for i in datasets
-        if problem(i()) == P
-            printstyled(String(nameof(i)),"\n"; color=:light_yellow)
-        end
-    end
-end
-
-function listdatasets(which::Symbol=:all)
-    if which == :all
-        printsubtypes(DatasetName)
-    elseif which == :image
-        printsubtypes(Image, 1)
-    elseif which == :tabular
-        printsubtypes(Tabular, 1)
-    elseif which == :classification
-        printproblemtypes(Classification)
-    elseif which == :regression
-        printproblemtypes(Regression)
-    else
-        error("Bad identifier.")
-    end
-end
-
-function info(dataset::Tabular)
-
-    printstyled("\n$dataset\n"; bold=true, color=:light_yellow)
-    text = """
-        Target column:  $(target(dataset))
-        Problem type:   $(problem(dataset))
-    """
-    println(infotext(dataset),text)
-end
-
-function infotext(dataset::DatasetName)
-    text = """
-        Name:           $(name(dataset))
-        Type:           $(nameof(supertype(typeof(dataset))))
-        Downloaded:     $(isdownloaded(dataset) ? "Yes $(DataDeps.determine_save_path((name(dataset))))" : "No")
-        Size:           $(PreprocessData.size(dataset)[1]) (train data)
-                        $(PreprocessData.size(dataset)[2]) (valid data)
-                        $(PreprocessData.size(dataset)[3]) (test data)
-    """
-end
-
+Returns true if file data-train.csv is present in dataset directory.
+"""
 function isdownloaded(dataset::DatasetName)
     path = joinpath(download_dir(),name(dataset))
     isfile(joinpath(path, "data-train.csv")) ? true : false
 end
-
-
 
 # Variation on function determine_save_path(name, rel=nothing) from DataDeps.jl (file
 # locations.jl). Here are no arguments, returns path to directory where DataDeps files are
