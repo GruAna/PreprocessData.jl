@@ -22,8 +22,9 @@ function split_traintest(
     dataset::DatasetName;
     trainSize::Float64=0.8,
     seed::Int=12345,
-    toarray::Bool=false,
-    header::Bool=false,
+    kwargs...
+    # toarray::Bool=false,
+    # header::Bool=false,
 )
     dsName = name(dataset)
     if !has_traindata(dataset)
@@ -50,19 +51,19 @@ function split_traintest(
         train, test = splits(dataset, train, indecesTrain, indecesTest)
     end
 
-    return postprocess(dataset, train, test, toarray, header)
+    return postprocess(dataset, train, test; kwargs...)
 end
 
-function traintest(
-    dataset::DatasetName;
-    trainSize::Float64=0.8,
-    seed::Int=12345,
-    toarray::Bool=false,
-    header::Bool=false,
-)
-    train, test = split_traintest
+# function traintest(
+#     dataset::DatasetName;
+#     trainSize::Float64=0.8,
+#     seed::Int=12345,
+#     toarray::Bool=false,
+#     header::Bool=false,
+# )
+#     train, test = split_traintest
 
-end
+# end
 
 """
     split_trainvalidtest(dataset; kwargs...)
@@ -89,8 +90,9 @@ function split_trainvalidtest(
     trainSize::Float64=0.8,
     validSize::Float64=0.2,
     seed::Int=12345,
-    toarray::Bool=false,
-    header::Bool=false,
+    kwargs...
+    # toarray::Bool=false,
+    # header::Bool=false,
 )
     dsName = name(dataset)
 
@@ -145,7 +147,7 @@ function split_trainvalidtest(
         valid, train = splits(dataset, train, indecesValid, indecesTrain)
     end
 
-    return postprocess(dataset, train, valid, test, toarray, header)
+    return postprocess(dataset, train, valid, test; kwargs...)
 end
 
 """
