@@ -8,56 +8,6 @@ headers(::Tabular) = ""
 # target should be always specified manually in dataset.jl file
 target(dataset::Tabular) = 0
 
-"""
-    getheader(dataset::Tabular)
-
-Returns header found in header.csv in folder .../datadeps/dataset. See `load`.
-"""
-function getheader(dataset::Tabular)
-    path = joinpath(getpath(dataset), "header.csv")
-    return loadheader(path, dataset)
-end
-
-"""
-    load(path::String, dataset::Tabular)
-
-Returns header as `Vector{String}` if there is a header file in path, else returns empty `String`.
-
-For good functionality - in header file each column name must be on a new line.
-"""
-function loadheader(path::String, dataset::Tabular)
-    if isfile(path)
-        df = CSV.File(path, header = false) |> DataFrame
-        targ = target(dataset)
-        header = Array(df[:,1])
-
-        if targ != 0   # if targ == 0 it was assumed that it is the last col
-            push!(header, header[targ])
-            header = header[Not(targ)]
-        end
-
-        return header
-    else
-        return ""
-    end
-end
-
-"""
-    new_header(header::Vector{String}, df::DataFrame...)
-
-Change column names of `DataFrames` to column names from header.
-
-Length of `header` must be the same as number of columns of `df`.
-"""
-function new_header(header::Vector{String}, df::DataFrame...)
-    if isempty(header)
-        return nothing
-    end
-    for d in df
-        rename!(d, header)
-    end
-end
-
 # ---------------------------- Util functions for splitting ---------------------------- */
 """
     getdata(dataset::Tabular, type::Symbol)
@@ -82,6 +32,18 @@ function getdata(
     return df
 end
 
+"""
+    load(dataset::Tabular, type::Symbol; kwargs...)
+
+Loads dataset of given type.
+
+- `type::Symbol`: default type is `:train`, other possible types are `test` and `valid`.
+
+# Keywords
+- `toarray::Bool=false`: if false returns `DataFrame`, else returns `Tuple` of arrays
+- `header::Bool=false`: if true returnes `DataFrame` has column names belonging to the
+dataset (it they are found), else default column naming is returned.
+"""
 function load(
     dataset::Tabular,
     type::Symbol=:train;
@@ -115,7 +77,7 @@ and labels vector) or as `DataFrame`.
 header::Bool=false: If true, searches for header file for the dataset and renames columns
 according to the file, else nothing happens.
 
-If `toarray==true` and `header==true` nothing happens.
+If both `toarray==true` and `header==true` nothing happens.
 """
 function postprocess(
     dataset::Tabular,
@@ -146,14 +108,48 @@ function postprocess(
     toarray::Bool=false,
     header::Bool=false,
     )
-    return postprocess(d,data1,toarray,header), postprodata2,toarray,header), postprocess(d,data3,toarray,header)
+    return postprocess(d,data1,toarray,header), postprocess(d,data2,toarray,header), postprocess(d,data3,toarray,header)
 end
 
+# ----------------------- Util functions for manipulating header ----------------------- */
+
+
+"""
+    getheader(dataset::Tabular)
+
+Returns header found in header.csv in folder .../datadeps/dataset. See `load`.
+"""
+function getheader(dataset::Tabular)
+    path = joinpath(getpath(dataset), "header.csv")
+    return loadheader(path, dataset)
+end
+
+"""
+    changeheader(dataset::Tabular, df::DataFrame)
+
+Changes header of `DataFrame` od given dataset, id there is a header.
+"""
 function changeheader(dataset::Tabular, df::DataFrame)
     hds = getheader(dataset)
     if isempty(hds)
         @info "No file with header (column names) found."
     else
         new_header(hds, df)
+    end
+end
+
+"""
+    new_header(header::Vector{String}, df::DataFrame...)
+
+Change column names of `DataFrames` to column names from header.
+
+Length of `header` must be the same as number of columns of `df`.
+"""
+function new_header(header::Vector{String}, df::DataFrame...)
+    if isempty(header)
+        return nothing
+    end
+    for d in df
+        rename!(d, header)
     end
 end

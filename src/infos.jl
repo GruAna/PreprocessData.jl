@@ -42,18 +42,24 @@ Argument `which` can be:
 anything else thorws an error.
 """
 function listdatasets(which::Symbol=:all)
+    print("\nPreprocessData ")
     if which == :all
+        println("all datasets:")
         printsubtypes(DatasetName)
     elseif which == :image || which == :i
+        println("image datasets:")
         printsubtypes(Image,  1)
     elseif which == :tabular || which == :t
+        println("tabular datasets:")
         printsubtypes(Tabular, 1)
     elseif which == :classification || which == :c
+        println("classification datasets:")
         printproblemtypes(Classification)
     elseif which == :regression which == :r
+        println("regression datasets:")
         printproblemtypes(Regression)
     else
-        error("Bad identifier.")
+        throw(ArgumentError("Bad identifier."))
     end
 end
 
@@ -68,7 +74,7 @@ function info(dataset::Tabular)
     printstyled("\n$dataset\n"; bold=true, color=:light_yellow)
     text = """
         Target column:  $(target(dataset))
-        Problem type:   $(problem(dataset))
+        Problem type:   $(nameof(problem(dataset)))
     """
     println(infotext(dataset),text)
 end

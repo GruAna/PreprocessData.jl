@@ -9,8 +9,8 @@ Split dataset from file to train and test data.
 # Keywords
 - `trainSize::Float64=0.8`: percentage of train data size
 - `seed::Int=12345`: random seed for shuffling rows of the dataset
-- `toarray::Bool=true`: if true returns `DataFrame`, else returns `Tuple` of arrays
-- `header::Bool=false`: if true returnes `DataFrame` has column names belonging to the
+- `toarray::Bool`: if false returns `DataFrame`, else returns `Tuple` of arrays
+- `header::Bool`: if true returnes `DataFrame` has column names belonging to the
 dataset (it they are found), else default column naming is returned.
 
 Return `Tuple{DataFrame}` (3 DataFrames - first with train data, second with test data,
@@ -23,8 +23,6 @@ function split_traintest(
     trainSize::Float64=0.8,
     seed::Int=12345,
     kwargs...
-    # toarray::Bool=false,
-    # header::Bool=false,
 )
     dsName = name(dataset)
     if !has_traindata(dataset)
@@ -54,16 +52,6 @@ function split_traintest(
     return postprocess(dataset, train, test; kwargs...)
 end
 
-# function traintest(
-#     dataset::DatasetName;
-#     trainSize::Float64=0.8,
-#     seed::Int=12345,
-#     toarray::Bool=false,
-#     header::Bool=false,
-# )
-#     train, test = split_traintest
-
-# end
 
 """
     split_trainvalidtest(dataset; kwargs...)
@@ -77,8 +65,8 @@ Split dataset from file to train, valid and test data.
 - `trainSize::Float64=0.8`: percentage of train data size
 - `validSize::Float64=0.2`: percentage of validation data size, selected from train data
 - `seed::Int=12345`: random seed for shuffling rows of the dataset
-- `toarray::Bool=true`: if true returns `DataFrame`, else returns `Tuple` of arrays
-- `header::Bool=false`: if true returnes `DataFrame` has column names belonging to the
+- `toarray::Bool`: if false returns `DataFrame`, else returns `Tuple` of arrays
+- `header::Bool`: if true returnes `DataFrame` has column names belonging to the
 dataset (it they are found), else default column naming is returned.
 
 Return `Tuple{DataFrame}` or `Tuple{Tuple{Array}}`. Return splitted data in order: train, valid, test.
@@ -91,8 +79,7 @@ function split_trainvalidtest(
     validSize::Float64=0.2,
     seed::Int=12345,
     kwargs...
-    # toarray::Bool=false,
-    # header::Bool=false,
+
 )
     dsName = name(dataset)
 
