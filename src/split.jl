@@ -4,9 +4,9 @@
 Split dataset from file to train and test data.
 
 # Arguments
-- `dataset::DatasetName`: dsName (type) of the datset for split
+-`dataset::DatasetName `: dataset for split
 
-# Keywords
+# Keyword arguments
 - `trainSize::Float64=0.8`: percentage of train data size
 - `seed::Int=12345`: random seed for shuffling rows of the dataset
 - `toarray::Bool`: if false returns `DataFrame`, else returns `Tuple` of arrays
@@ -25,6 +25,7 @@ function split_traintest(
     kwargs...
 )
     dsName = name(dataset)
+
     if !has_traindata(dataset)
         error("No train data found in $(getpath(dataset)). Check $dsName registration file
         and its function `size`.")
@@ -59,9 +60,9 @@ end
 Split dataset from file to train, valid and test data.
 
 # Arguments
--`dataset::DatasetdsName `: dsName of the datset for split
+-`dataset::DatasetName`: dataset for split
 
-# Keywords
+# Keyword arguments
 - `trainSize::Float64=0.8`: percentage of train data size
 - `validSize::Float64=0.2`: percentage of validation data size, selected from train data
 - `seed::Int=12345`: random seed for shuffling rows of the dataset
@@ -69,7 +70,8 @@ Split dataset from file to train, valid and test data.
 - `header::Bool`: if true returnes `DataFrame` has column names belonging to the
 dataset (it they are found), else default column naming is returned.
 
-Return `Tuple{DataFrame}` or `Tuple{Tuple{Array}}`. Return splitted data in order: train, valid, test.
+Return `Tuple{DataFrame}` or `Tuple{Tuple{Array}}`. Return splitted data in order: train,
+valid, test.
 If `toarray = true` return 3 `DataFrames`, else return 3 tuples of arrays (first array
 represents attributes, second represents labels for each).
 """
@@ -79,7 +81,6 @@ function split_trainvalidtest(
     validSize::Float64=0.2,
     seed::Int=12345,
     kwargs...
-
 )
     dsName = name(dataset)
 

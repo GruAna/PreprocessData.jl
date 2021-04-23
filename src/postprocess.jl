@@ -41,8 +41,8 @@ function change(data::AbstractArray, substracted, devided; dims=1)
 end
 
 function change(data::AbstractDataFrame, substracted, devided)
-    n = Base.size(data,2)
-    for i in 1:n-1
+    n = length(substracted)
+    for i in 1:n
         if eltype(data[:,i]) <: Number
             data[!,i] = (data[:,i] .- substracted[i]) ./ devided[i]
         end
@@ -109,7 +109,7 @@ This function uses `norm` from the package `LinearAlgebra`.
 """
 function mynorm(data::AbstractArray; dims::Int=1)
     if dims == 1    #by columns
-        return norm.(eachcol(data))
+        return makerow(norm.(eachcol(data)))
     elseif dims == 2
         return norm.(eachrow(data))
     else
@@ -131,16 +131,20 @@ over which norm is computed. For more see [`mynorm`](@ref)
 """
 function l2normalization(data...; kwargs...)
     nnorm = mynorm(first(data); kwargs...)
+    data isa AbstractArray ? zero = 0 : zero = zeros(length(nnorm))
 
-    return [change(d,zeros(length(nnorm)), nnorm) for d in data]
+    return [change(d, zero, nnorm) for d in data]
 end
 
 function l2normalization(data; kwargs...)
-    nnorm = makerow(mynorm(data; kwargs...))
+    nnorm = mynorm(data; kwargs...)
+    data isa AbstractArray ? zero = 0 : zero = zeros(length(nnorm))
 
-    return change(data,0, nnorm)
+    return change(data, zero, nnorm)
 end
 
+createzero(data::AbstractArray) = 0
+createzero(data::AbstractDataFrame) = zeros(length(nnorm))
 """
     normalize(type, data... kwargs...)
 
