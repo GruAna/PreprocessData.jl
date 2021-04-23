@@ -298,7 +298,7 @@ uuid = "21216c6a-2e73-6563-6e65-726566657250"
 version = "1.2.1"
 
 [[PreprocessData]]
-deps = ["CSV", "DataDeps", "DataFrames", "InteractiveUtils", "MLDatasets", "Random"]
+deps = ["CSV", "DataDeps", "DataFrames", "InteractiveUtils", "LinearAlgebra", "MLDatasets", "Random", "Statistics"]
 path = ".."
 uuid = "7b4f4f42-4ed7-4d22-8778-a1d8101cc748"
 version = "0.1.0"

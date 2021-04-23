@@ -1,12 +1,32 @@
 # -------------------------- Util functions for preprocessing -------------------------- */
 
 # Default header for Tabular datasets is empty String.
-headers(::Tabular) = ""
+"""
+    headers(::Tabular)
 
-# Default target for Tabular datasets is last column. It can be different number for every
-# dataset, so we mark it as zero and remember it for later use.
-# target should be always specified manually in dataset.jl file
+Returns column names of `Tabular` dataset. Default is empty `String`.
+"""
+headers(dataset::Tabular) = ""
+
+"""
+    target(::Tabular)
+
+Returns order of target column.
+
+Default target for `Tabular` datasets is last column. It can be different number for every
+dataset, so we mark it as zero and remember it for later use.
+Target should be always specified manually in dataset.jl file.
+"""
 target(dataset::Tabular) = 0
+
+"""
+    categorical(::Tabular)
+
+Returns indeces of columns containing categorical data. Default is empty range.
+"""
+
+categorical(dataset::Tabular) = 1:0
+
 
 # ---------------------------- Util functions for splitting ---------------------------- */
 """

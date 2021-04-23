@@ -40,28 +40,27 @@ function extract(path)
 end
 
 """
-    preprocess(path, dataset, header, categorical_cols, kwargs...)
+    preprocess(path, dataset, header, kwargs...)
 
 Create csv file containing data from dataset in "standard" format.
 
 The format can be described as - columns represents attributes, rows instances,
-attributes in a row are separated by comma. First row of file is header
-Last column contains target values and is named Target.`categorical_cols` if provided prepend "Categ-"
-at the beginning of column name.
+attributes in a row are separated by comma. First row of file is header.
+Last column contains target values and is named Target. If `dataset` has defined
+`categorical` columns, appends "-C" at the beginning of column name.
 
-#Arguments
-- `header::Bool=false`: false no header, names `Column 1` are created.
-True first row of file contains column names.
-- `categorical_cols=0:1`: range of columns with categorical values.
+#Keyword arguments
 - `kwargs...`: keyword arguments that are possible in `CSV.File` function.
 """
 function preprocess(
     path::AbstractString,
     dataset::DatasetName;
-    header::Bool = false,
-    categorical_cols::Union{Int, UnitRange{Int}, Array{Int,1}}=1:0,
     kwargs...
 )
+    # If header is Integer, it means it is in the file together with data and is used in
+    # CSV.file loading.
+    headers(dataset) isa Integer ? header = headers(dataset) : header = false
+
     df = CSV.File(
         path,
         header = header,
@@ -71,10 +70,10 @@ function preprocess(
         kwargs...
         ) |> DataFrame
 
-    # if header is true or if header is defined in $dataset.jl
+    # if header is an Int or true or if header is defined in $dataset.jl
     # saves header to a file header.csv
     # does not overwrite
-    if header
+    if headers(dataset) isa Int || header
         save_header(names(df), path)
     elseif !isempty(headers(dataset))
         save_header(headers(dataset), path)
@@ -89,8 +88,9 @@ function preprocess(
 
     df = place_target(col, df)
 
+    categorical_cols = categorical(dataset)
     for i in categorical_cols
-        rename!(df, i => names(df)[i]*"-Cat")
+        rename!(df, i => names(df)[i]*"-C")
     end
 
     ext = extension(dataset)
