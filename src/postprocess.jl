@@ -14,10 +14,10 @@ over dimensions.
 This function uses `mean` and `std` from the package `Statistics`.
 """
 function meanstd(data::AbstractArray; dims::Int=1)
-    mean(data; dims), std(data; dims)
+    mean(data; dims=dims), std(data; dims=dims)
 end
 function meanstd(data::AbstractDataFrame)
-    makerow(mean.(eachcol(data[:,1:end-1]))), makerow(std.(eachcol(data[:,1:end-1])))
+    mean.(eachcol(data[:,1:end-1])), std.(eachcol(data[:,1:end-1]))
 end
 
 """
@@ -44,7 +44,7 @@ function change(data::AbstractDataFrame, substracted, devided)
     n = Base.size(data,2)
     for i in 1:n-1
         if eltype(data[:,i]) <: Number
-            data[!,i] = (data[:,i].-substracted) ./ devided
+            data[!,i] = (data[:,i] .- substracted[i]) ./ devided[i]
         end
     end
     return data
@@ -77,7 +77,10 @@ end
 Returns minimum and maximum of columns or rows of given `data`.
 `dims` specifies whether it is over columns or rows.
 """
-minimaxi(data; dims=1) = minimum(data; dims), maximum(data; dims)
+minimaxi(data::AbstractArray; dims=1) = minimum(data; dims=dims), maximum(data; dims=dims)
+
+minimaxi(data::AbstractDataFrame) = minimum.(eachcol(data[:,1:end-1])), maximum.(eachcol(data[:,1:end-1]))
+
 
 """
     minmax(data...; kwargs...)
@@ -127,9 +130,9 @@ If `data` is an `AbstractArray`, in keyword argument `dims` dimensions can be sp
 over which norm is computed. For more see [`mynorm`](@ref)
 """
 function l2normalization(data...; kwargs...)
-    nnorm = makerow(mynorm(first(data); kwargs...))
+    nnorm = mynorm(first(data); kwargs...)
 
-    return [change(d,0, nnorm) for d in data]
+    return [change(d,zeros(length(nnorm)), nnorm) for d in data]
 end
 
 function l2normalization(data; kwargs...)
@@ -143,7 +146,7 @@ end
 
 Normalizes given `data` by the first group of data in `data`.
 
-# Arguments
+# Keyword arguments
 -`type::Symbol=:Z`: specify which feature scaling is used. For standardization, `type` is
 `:standardization`,`:standard`,`:z` or `:Z`. For minmax scaling `type` is `:minmax` or `:mm`,
 for l2 normalization `type` is `:l2`, `:L2` or `:norm`.
@@ -152,7 +155,7 @@ for l2 normalization `type` is `:l2`, `:L2` or `:norm`.
 If `data` is an `AbstractArray`, a keyword argument `dims` can be provided to compute values
 over dimensions.
 """
-function normalize(type::Symbol=:Z, data...; kwargs...)
+function normalize(data...; type::Symbol=:Z, kwargs...)
     if type in (:z, :Z, :standardization, :standard)
         return standardization(data...; kwargs...)
     elseif type in (:minmax, :mm)
