@@ -8,6 +8,7 @@ using Statistics: mean, std
 
 export split_traintest, split_trainvalidtest
 export load
+export normalize
 export listdatasets, info
 
 const DATASET_DIR_TAB = joinpath(@__DIR__, "datasets/tabular")
@@ -19,6 +20,7 @@ include("tabular.jl")
 include("image.jl")
 include("preprocess.jl")
 include("split.jl")
+include("postprocess.jl")
 include("infos.jl")
 
 scriptfiles = [readdir(DATASET_DIR_TAB; join = true); readdir(DATASET_DIR_IMG; join = true)]

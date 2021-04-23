@@ -160,7 +160,7 @@ end
 Renames downloaded file based on type.
 
 If type is `:labels`,`label` or `:target` (used for file containing labels) file is renamed.
-For labels filename has format labels-typeSplit.csv. For typeSplit see `find_in`.
+For labels filename has format labels-typeSplit.csv. For typeSplit see [`find_in`](@ref).
 If type is `:header` or `:headers` (used for file containing header) file is renamed.
 For header filename has format header.csv.
 """
