@@ -3,6 +3,8 @@ module PreprocessData
 using DataDeps, DataFrames, CSV, InteractiveUtils, Random
 using MLDatasets
 using InteractiveUtils: subtypes
+using LinearAlgebra: norm
+using Statistics: mean, std
 
 export split_traintest, split_trainvalidtest
 export load

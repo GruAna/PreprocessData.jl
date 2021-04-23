@@ -113,6 +113,27 @@ end
 
 # ----------------------- Util functions for manipulating header ----------------------- */
 
+"""
+    loadheader(path::String, dataset::Tabular)
+
+Loads header for given dataset from a file.
+
+Changes position of target column if target column was not the last column.
+"""
+function loadheader(path::String, dataset::Tabular)
+    if isfile(path)
+        df = CSV.File(path, header = false) |> DataFrame
+        targ = target(dataset)
+        header = Array(df[:,1])
+        if targ != 0   # if targ == 0 it was assumed that it is the last col
+            push!(header, header[targ])
+            header = header[Not(targ)]
+        end
+        return header
+    else
+        return ""
+    end
+end
 
 """
     getheader(dataset::Tabular)
@@ -152,4 +173,107 @@ function new_header(header::Vector{String}, df::DataFrame...)
     for d in df
         rename!(d, header)
     end
+end
+
+# ---------------------------------- Other functions ----------------------------------- */
+
+"""
+    meanstd(data; dims)
+
+Returns mean and standard deviation of columns or rows of given `data`.
+
+Mean and standard deviation are returned in a row vector (`Tuple` of two `1xn Matrix`).
+
+# Arguments
+- `data` can be an `AbstractArray` or `AbstractDataFrame`
+If `data` is an `AbstractArray`, a keyword argument `dims` can be provided to compute values
+over dimensions.
+
+This function uses `mean` and `std` from the package `Statistics`.
+"""
+function meanstd(data::AbstractArray; dims::Int=1)
+    mean(data; dims), std(data; dims)
+end
+function meanstd(data::AbstractDataFrame)
+    makerow(mean.(eachcol(data[:,1:end-1]))), makerow(std.(eachcol(data[:,1:end-1])))
+end
+
+"""
+    makerow(vec::Matrix)
+
+For matrix permutes dimensions (makes a row vector from column vector). If `vec` is already
+a row vector then does nothing.
+"""
+makerow(vec::AbstractArray) = Base.size(vec, 1) == 1 ? vec : permutedims(vec)
+
+"""
+    change(data, substracted, divided)
+
+Changes `data` elements following a formula: `data .- substracted ./ devided`.
+
+# Arguments
+If `data` is an `AbstractArray`, changes all elements.
+If `data` is an `AbstractDataFrame`, changes elements in all columns except last one.
+"""
+function change(data::AbstractArray, substracted, devided; dims=1)
+        (data .- substracted) ./ devided
+end
+
+function change(data::AbstractDataFrame, substracted, devided)
+    n = Base.size(data,2)
+    for i in 1:n-1
+        if eltype(data[:,i]) <: Number
+            data[!,i] = (data[:,i].-substracted) ./ devided
+        end
+    end
+    return data
+end
+
+function normalize(type::Symbol=:Z, data...; kwargs...)
+    if type in (:standardization, :z, :Z)
+        return standardization(data...; kwargs...)
+    elseif type in (:minmax, :mm)
+        return minmax(data...; kwargs...)
+    end
+end
+
+function standardization(data; kwargs...)
+    nmean, nstd = meanstd(data; kwargs...)
+
+    return change(data, nmean, nstd)
+end
+
+function standardization(data...;kwargs...)
+
+    nmean, nstd = meanstd(first(data); kwargs...)
+
+    return [change(d,nmean, nstd) for d in data]
+end
+
+minimaxi(data; dims=1) = minimum(data; dims), maximum(data; dims)
+
+function minmax(data...; kwargs...)
+    nmin, nmax = minimaxi(first(data); kwargs...)
+
+    return [change(d,nmin, nmax-nmin) for d in data]
+end
+
+function mynorm(data::AbstractArray; dims::Int=1)
+    if dims == 1    #by columns
+        return norm.(eachcol(data))
+    elseif dims == 2
+        return norm.(eachrow(data))
+    else
+        throw(ArgumentError("Wrong dimensions."))
+    end
+end
+
+function mynorm(data::AbstractDataFrame)
+    return norm.(eachcol(data[:,1:end-1]))
+end
+
+function l2normalization(data...; kwargs...)
+    nnorm = makerow(mynorm(first(data); kwargs...))
+
+    return [change(d,0, nnorm) for d in data]
 end
