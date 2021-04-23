@@ -16,7 +16,7 @@ This function uses `mean` and `std` from the package `Statistics`.
 function meanstd(data::AbstractArray; dims::Int=1)
     mean(data; dims=dims), std(data; dims=dims)
 end
-function meanstd(data::AbstractDataFrame)
+function meanstd(data::AbstractDataFrame; dims)
     mean.(eachcol(data[:,1:end-1])), std.(eachcol(data[:,1:end-1]))
 end
 
@@ -75,11 +75,11 @@ end
     minimaxi(data; dims=1)
 
 Returns minimum and maximum of columns or rows of given `data`.
-`dims` specifies whether it is over columns or rows.
+If `data` is an `AbstractArray`, `dims` specifies whether it is over columns or rows.
 """
 minimaxi(data::AbstractArray; dims=1) = minimum(data; dims=dims), maximum(data; dims=dims)
 
-minimaxi(data::AbstractDataFrame) = minimum.(eachcol(data[:,1:end-1])), maximum.(eachcol(data[:,1:end-1]))
+minimaxi(data::AbstractDataFrame; dims) = minimum.(eachcol(data[:,1:end-1])), maximum.(eachcol(data[:,1:end-1]))
 
 
 """
@@ -88,7 +88,7 @@ minimaxi(data::AbstractDataFrame) = minimum.(eachcol(data[:,1:end-1])), maximum.
 Returns min-max scaled data by the first group of data in `data`.
 
 If `data` is an `AbstractArray`, in keyword argument `dims` dimensions can be specified
-over which minimum and maximum are computed.
+over which (columns or rows) minimum and maximum are computed.
 """
 function minmax(data...; kwargs...)
     nmin, nmax = minimaxi(first(data); kwargs...)
@@ -117,7 +117,7 @@ function mynorm(data::AbstractArray; dims::Int=1)
     end
 end
 
-function mynorm(data::AbstractDataFrame)
+function mynorm(data::AbstractDataFrame; dims)
     return norm.(eachcol(data[:,1:end-1]))
 end
 

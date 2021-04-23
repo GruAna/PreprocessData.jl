@@ -1,14 +1,14 @@
-function getModule(::Image) end
-name(dataset::MLImage) = String(nameof(typeof(dataset)))
+function getModule(::Image{MLImage}) end
+name(dataset::Image{MLImage}) = String(nameof(typeof(dataset)))
 
 # ---------------------------- Util functions for splitting ---------------------------- */
 
 """
-    getdata(dataset::MLImage, type::Symbol)
+    getdata(dataset::Image{MLImage}, type::Symbol)
 
 Returns data from dataset. `type` is either `:train` or `:test.`
 """
-function getdata(dataset::MLImage, type::Symbol=:train)
+function getdata(dataset::Image{MLImage}, type::Symbol=:train)
     datadep = getModule(dataset)
     if type == :train
         return datadep.traindata()
@@ -19,24 +19,23 @@ function getdata(dataset::MLImage, type::Symbol=:train)
     end
 end
 
-load(dataset::Image, type::Symbol=:train) = getdata(dataset, type)
+load(dataset::Image{<:ImageType}, type::Symbol=:train) = getdata(dataset, type)
 
 """
-    splits(dataset::MLImage, data, indeces1, indeces2)
+    splits(dataset::Image{MLImage}, data, indeces1, indeces2)
 
 Devides `data` from `dataset` to two parts.
 """
-function splits(dataset::MLImage, data,  indeces1, indeces2)
+function splits(dataset::Image{MLImage}, data,  indeces1, indeces2)
     datadep = getModule(dataset)
     return datadep.traindata(indeces1), datadep.traindata(indeces2)
 end
 
 """
-    postprocess(dataset::Image, data...; kwargs...)
+    postprocess(dataset::Image{MLImage}, data...)
 
-Returns image data. Kwargs are empty.
+Returns image data.
 """
-
-function postprocess(dataset::Image, data...; kwargs...)
+function postprocess(dataset::Image{MLImage}, data...; kwargs...)
     return data
 end
