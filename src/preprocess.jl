@@ -42,7 +42,7 @@ end
 """
     preprocess(path, dataset, header, kwargs...)
 
-Create csv file containing data from dataset in "standard" format.
+Create csv file containing data from tabular dataset in "standard" format.
 
 The format can be described as - columns represents attributes, rows instances,
 attributes in a row are separated by comma. First row of file is header.
@@ -54,7 +54,7 @@ Last column contains target values and is named Target. If `dataset` has defined
 """
 function preprocess(
     path::AbstractString,
-    dataset::DatasetName;
+    dataset::Tabular;
     kwargs...
 )
     # If header is Integer, it means it is in the file together with data and is used in
@@ -64,9 +64,10 @@ function preprocess(
     df = CSV.File(
         path,
         header = header,
-        missingstrings = ["", "NA", "?", "*", "#DIV/0!"],
-        truestrings = ["T", "t", "TRUE", "true", "y", "yes"],
-        falsestrings = ["F", "f", "FALSE", "false", "n", "no"],
+        transpose = transposed(dataset),
+        missingstrings = ["", "NA", "?", "*", "#DIV/0!", "missing", "NaN"],
+        truestrings = ["T", "t", "TRUE", "true", "y", "yes", "Y"],
+        falsestrings = ["F", "f", "FALSE", "false", "n", "no", "N"],
         kwargs...
         ) |> DataFrame
 

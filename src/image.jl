@@ -19,6 +19,13 @@ function getdata(dataset::Image{MLImage}, type::Symbol=:train)
     end
 end
 
+"""
+    load(dataset::Image, type::Symbol; kwargs...)
+
+Loads dataset of given type.
+
+- `type::Symbol`: default type is `:train`, other possible types are `test` and `valid`.
+"""
 load(dataset::Image{<:ImageType}, type::Symbol=:train) = getdata(dataset, type)
 
 """

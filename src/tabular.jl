@@ -26,7 +26,7 @@ Returns indeces of columns containing categorical data. Default is empty range.
 """
 
 categorical(dataset::Tabular) = 1:0
-
+transposed(dataset::Tabular) = false
 
 # ---------------------------- Util functions for splitting ---------------------------- */
 """
@@ -70,8 +70,6 @@ function load(
     toarray::Bool=false,
     header::Bool=false,
     )
-    path = getpath(dataset)       # path to a directory of given datadep
-
     df = getdata(dataset, type)
 
     return postprocess(dataset, df, toarray, header)

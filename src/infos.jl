@@ -99,3 +99,12 @@ function infotext(dataset::DatasetName)
                         $(PreprocessData.size(dataset)[3]) (test data)
     """
 end
+
+"""
+    remove(dataset::DatasetName)
+
+Removes dataset directory.
+"""
+function remove(dataset::DatasetName)
+    rm(@datadep_str name(dataset); recursive=true)
+end

@@ -168,3 +168,10 @@ function normalize(data...; type::Symbol=:Z, kwargs...)
         return l2normalization(data...; kwargs...)
     end
 end
+
+function labels(dataset)
+end
+
+function binarize(data, label)
+
+end
