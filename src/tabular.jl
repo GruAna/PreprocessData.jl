@@ -55,7 +55,8 @@ end
 """
     load(dataset::Tabular, type::Symbol; kwargs...)
 
-Loads dataset of given type.
+Loads dataset of given type. Type based on filenames in datadeps folder (types available
+only if the dataset was splitted before downloading.)
 
 - `type::Symbol`: default type is `:train`, other possible types are `test` and `valid`.
 

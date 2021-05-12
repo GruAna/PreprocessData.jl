@@ -16,7 +16,7 @@ This function uses `mean` and `std` from the package `Statistics`.
 function meanstd(data::AbstractArray; dims::Int=1)
     mean(data; dims=dims), std(data; dims=dims)
 end
-function meanstd(data::AbstractDataFrame; dims)
+function meanstd(data::AbstractDataFrame; dims::Int=1)
     mean.(eachcol(data[:,1:end-1])), std.(eachcol(data[:,1:end-1]))
 end
 
@@ -44,7 +44,7 @@ function change(data::AbstractDataFrame, substracted, devided)
     n = length(substracted)
     for i in 1:n
         if eltype(data[:,i]) <: Number
-            data[!,i] = (data[:,i] .- substracted[i]) ./ devided[i]
+            data[:,i] = (data[:,i] .- substracted[i]) ./ devided[i]
         end
     end
     return data
@@ -161,7 +161,8 @@ over dimensions.
 """
 function normalize(data...; type::Symbol=:Z, kwargs...)
     if type in (:z, :Z, :standardization, :standard)
-        return standardization(data...; kwargs...)
+        ndata = standardization(data...; kwargs...)
+        return ndata
     elseif type in (:minmax, :mm)
         return minmax(data...; kwargs...)
     elseif type in (:l2, :L2, :norm)
@@ -169,9 +170,20 @@ function normalize(data...; type::Symbol=:Z, kwargs...)
     end
 end
 
-function labels(dataset)
+function labels(dataset::Tabular)
+    df = load(dataset)
+    return df[:,end]
 end
 
-function binarize(data, label)
 
+function labels(dataset::MLImage)
+    datadep = getModule(dataset)
+    return datadep.trainlabels()
+end
+
+classes(dataset::DatasetName) = unique(labels(dataset))
+
+function binarize(data, label::String)
+    arr = BitArray(undef, (length(data), 1))
+    [occursin(label,i) ? arr[i]=1 : arr[i] = 0 for i in data]
 end
