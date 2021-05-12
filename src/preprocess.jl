@@ -109,17 +109,17 @@ function save_header(names::Vector{<:AbstractString}, path::AbstractString)
     end
 end
 
-function rename_cols(df::DataFrame)
+function rename_cols(df::AbstractDataFrame)
     return rename!(df, collect(1:(ncol(df)-1)) .=> ["Column $i" for i in 1:ncol(df)-1])
 end
 
 
 """
-    place_target(column::Int, df::DataFrame)
+    place_target(column::Int, df::AbstractDataFrame)
 
 Moves column from its position to last position in `DataFrame` df.
 """
-function place_target(column::Int, df::DataFrame)
+function place_target(column::Int, df::AbstractDataFrame)
     lastColIndex = ncol(df)
 
     if column > 0 || column < lastColIndex
@@ -136,11 +136,11 @@ function place_target(column::Int, df::DataFrame)
 end
 
 """
-    place_target(fileName::String, df::DataFrame)
+    place_target(fileName::AbstractString, df::AbstractDataFrame)
 
 Pushes column with labels from a file to last position in `DataFrame` df.
 """
-function place_target(fileName::String, df::DataFrame)
+function place_target(fileName::AbstractString, df::AbstractDataFrame)
     pathLabels = joinpath(pwd(), fileName)
     dfLabels = CSV.File(
         pathLabels,
@@ -156,7 +156,7 @@ function place_target(fileName::String, df::DataFrame)
 end
 
 """
-    preprocess(path::String, type::Symbol)
+    preprocess(path::AbstractString, type::Symbol)
 
 Renames downloaded file based on type.
 
@@ -165,7 +165,7 @@ For labels filename has format labels-typeSplit.csv. For typeSplit see [`find_in
 If type is `:header` or `:headers` (used for file containing header) file is renamed.
 For header filename has format header.csv.
 """
-function preprocess(path::String, type::Symbol)
+function preprocess(path::AbstractString, type::Symbol)
     if type == :labels || type == :label || type == :target
         typeSplit = find_in(getfilename(path))
         mv(basename(path), string("labels-", typeSplit))
@@ -177,7 +177,7 @@ function preprocess(path::String, type::Symbol)
 end
 
 """
-    find_in(name::String)
+    find_in(name::AbstractString)
 
 Searches for strings train, test, valid in given name.
 
@@ -193,7 +193,7 @@ julia> PreprocessData.find_in("name.csv")
 "train"
 ```
 """
-function find_in(name::String)
+function find_in(name::AbstractString)
     if occursin("train", name) || (!occursin("valid", name) && !occursin("test", name))
         return "train"
     elseif occursin("valid", name)

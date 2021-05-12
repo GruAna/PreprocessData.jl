@@ -36,18 +36,18 @@ Changes `data` elements following a formula: `data .- substracted ./ devided`.
 If `data` is an `AbstractArray`, changes all elements.
 If `data` is an `AbstractDataFrame`, changes elements in all columns except last one.
 """
-function change(data::AbstractArray, substracted, devided; dims=1)
-        (data .- substracted) ./ devided
+function change!(data::AbstractArray, substracted, devided; dims=1)
+        data .= (data .- substracted) ./ devided
 end
 
-function change(data::AbstractDataFrame, substracted, devided)
+function change!(data::AbstractDataFrame, substracted, devided)
     n = length(substracted)
     for i in 1:n
         if eltype(data[:,i]) <: Number
-            data[:,i] = (data[:,i] .- substracted[i]) ./ devided[i]
+            data[:,i] .= (data[:,i] .- substracted[i]) ./ devided[i]
         end
     end
-    return data
+    return
 end
 
 """
@@ -58,17 +58,16 @@ Returns normalized data by the first group of data in `data` using mean and vari
 If `data` is an `AbstractArray`, in keyword argument `dims` dimensions can be specified
 over which mean and standard deviation are computed.
 """
-function standardization(data; kwargs...)
+function standardization!(data; kwargs...)
     nmean, nstd = meanstd(data; kwargs...)
-
-    return change(data, nmean, nstd)
+    change!(data, nmean, nstd)
+    return
 end
 
-function standardization(data...;kwargs...)
-
+function standardization!(data...;kwargs...)
     nmean, nstd = meanstd(first(data); kwargs...)
-
-    return [change(d,nmean, nstd) for d in data]
+    [change!(d,nmean, nstd) for d in data]
+    return
 end
 
 """
@@ -90,10 +89,10 @@ Returns min-max scaled data by the first group of data in `data`.
 If `data` is an `AbstractArray`, in keyword argument `dims` dimensions can be specified
 over which (columns or rows) minimum and maximum are computed.
 """
-function minmax(data...; kwargs...)
+function minmax!(data...; kwargs...)
     nmin, nmax = minimaxi(first(data); kwargs...)
-
-    return [change(d,nmin, nmax-nmin) for d in data]
+    [change!(d,nmin, nmax-nmin) for d in data]
+    return
 end
 
 """
@@ -129,18 +128,18 @@ Returns normalized data by the first group of data in `data`.
 If `data` is an `AbstractArray`, in keyword argument `dims` dimensions can be specified
 over which norm is computed. For more see [`mynorm`](@ref)
 """
-function l2normalization(data...; kwargs...)
+function l2normalization!(data...; kwargs...)
     nnorm = mynorm(first(data); kwargs...)
     data isa AbstractArray ? zero = 0 : zero = zeros(length(nnorm))
-
-    return [change(d, zero, nnorm) for d in data]
+    [change!(d, zero, nnorm) for d in data]
+    return
 end
 
-function l2normalization(data; kwargs...)
+function l2normalization!(data; kwargs...)
     nnorm = mynorm(data; kwargs...)
     data isa AbstractArray ? zero = 0 : zero = zeros(length(nnorm))
-
-    return change(data, zero, nnorm)
+    change!(data, zero, nnorm)
+    return
 end
 
 createzero(data::AbstractArray) = 0
@@ -159,15 +158,15 @@ for l2 normalization `type` is `:l2`, `:L2` or `:norm`.
 If `data` is an `AbstractArray`, a keyword argument `dims` can be provided to compute values
 over dimensions.
 """
-function normalize(data...; type::Symbol=:Z, kwargs...)
+function normalize!(data...; type::Symbol=:Z, kwargs...)
     if type in (:z, :Z, :standardization, :standard)
-        ndata = standardization(data...; kwargs...)
-        return ndata
+        standardization!(data...; kwargs...)
     elseif type in (:minmax, :mm)
-        return minmax(data...; kwargs...)
+        minmax!(data...; kwargs...)
     elseif type in (:l2, :L2, :norm)
-        return l2normalization(data...; kwargs...)
+        l2normalization!(data...; kwargs...)
     end
+    return
 end
 
 function labels(dataset::Tabular)
@@ -181,9 +180,17 @@ function labels(dataset::MLImage)
     return datadep.trainlabels()
 end
 
+"""
+    classes(dataset)
+
+Prints unique names of target values.
+"""
 classes(dataset::DatasetName) = unique(labels(dataset))
 
-function binarize(data, label::String)
-    arr = BitArray(undef, (length(data), 1))
-    [occursin(label,i) ? arr[i]=1 : arr[i] = 0 for i in data]
-end
+"""
+    binarize(data, pos_labels)
+
+Binarize data for specified positive labels. (Data must contain just labels no feature valeus.)
+"""
+binarize(data, pos_labels::AbstractString) = binarize(data, [pos_labels])
+binarize(data, pos_labels) = [in(i, pos_labels) for i in data]

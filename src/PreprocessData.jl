@@ -8,7 +8,7 @@ using Statistics: mean, std
 
 export split_traintest, split_trainvalidtest
 export load
-export normalize, binarize, classes
+export normalize!, binarize, classes
 export listdatasets, info, remove
 
 const DATASET_DIR_TAB = joinpath(@__DIR__, "datasets/tabular")
