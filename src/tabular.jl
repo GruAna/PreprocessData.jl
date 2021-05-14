@@ -167,7 +167,7 @@ end
 """
     changeheader(dataset::Tabular, df::DataFrame)
 
-Changes header of `DataFrame` od given dataset, id there is a header.
+Changes header of `DataFrame` of given dataset, id there is a header.
 """
 function changeheader(dataset::Tabular, df::DataFrame)
     hds = getheader(dataset)
@@ -192,4 +192,16 @@ function new_header(header::Vector{String}, df::DataFrame...)
     for d in df
         rename!(d, header)
     end
+end
+
+# ---------------------- Other functions for manipulating header ---------------------- */
+
+"""
+    labels(dataset::Tabular)
+
+Returns train label array for given dataset.
+"""
+function labels(dataset::Tabular)
+    df = load(dataset)
+    return df[:,end]
 end

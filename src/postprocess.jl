@@ -1,5 +1,4 @@
 # ------------------ Util functions for normalizing tabular datasets ------------------- */
-
 """
     meanstd(data; dims::Int=1)
 
@@ -16,8 +15,8 @@ This function uses `mean` and `std` from the package `Statistics`.
 function meanstd(data::AbstractArray; dims::Int=1)
     mean(data; dims=dims), std(data; dims=dims)
 end
-function meanstd(data::AbstractDataFrame; dims::Int=1)
-    mean.(eachcol(data[:,1:end-1])), std.(eachcol(data[:,1:end-1]))
+function meanstd(data::AbstractDataFrame)
+    mean.(eachcol(data)), std.(eachcol(data))
 end
 
 """
@@ -37,15 +36,15 @@ If `data` is an `AbstractArray`, changes all elements.
 If `data` is an `AbstractDataFrame`, changes elements in all columns except last one.
 """
 function change!(data::AbstractArray, substracted, devided; dims=1)
-        data .= (data .- substracted) ./ devided
+    data .= (data .- substracted) ./ devided
+    display(data)
+    return
 end
 
 function change!(data::AbstractDataFrame, substracted, devided)
     n = length(substracted)
     for i in 1:n
-        if eltype(data[:,i]) <: Number
-            data[:,i] .= (data[:,i] .- substracted[i]) ./ devided[i]
-        end
+        data[:,i] .= (data[:,i] .- substracted[i]) ./ devided[i]
     end
     return
 end
@@ -64,11 +63,6 @@ function standardization!(data; kwargs...)
     return
 end
 
-function standardization!(data...;kwargs...)
-    nmean, nstd = meanstd(first(data); kwargs...)
-    [change!(d,nmean, nstd) for d in data]
-    return
-end
 
 """
     minimaxi(data; dims=1)
@@ -78,7 +72,7 @@ If `data` is an `AbstractArray`, `dims` specifies whether it is over columns or 
 """
 minimaxi(data::AbstractArray; dims=1) = minimum(data; dims=dims), maximum(data; dims=dims)
 
-minimaxi(data::AbstractDataFrame; dims) = minimum.(eachcol(data[:,1:end-1])), maximum.(eachcol(data[:,1:end-1]))
+minimaxi(data::AbstractDataFrame) = minimum.(eachcol(data)), maximum.(eachcol(data))
 
 
 """
@@ -89,9 +83,9 @@ Returns min-max scaled data by the first group of data in `data`.
 If `data` is an `AbstractArray`, in keyword argument `dims` dimensions can be specified
 over which (columns or rows) minimum and maximum are computed.
 """
-function minmax!(data...; kwargs...)
-    nmin, nmax = minimaxi(first(data); kwargs...)
-    [change!(d,nmin, nmax-nmin) for d in data]
+function minmax!(data; kwargs...)
+    nmin, nmax = minimaxi(data; kwargs...)
+    change!(data, nmin, nmax-nmin)
     return
 end
 
@@ -116,8 +110,8 @@ function mynorm(data::AbstractArray; dims::Int=1)
     end
 end
 
-function mynorm(data::AbstractDataFrame; dims)
-    return norm.(eachcol(data[:,1:end-1]))
+function mynorm(data::AbstractDataFrame)
+    return norm.(eachcol(data))
 end
 
 """
@@ -128,13 +122,6 @@ Returns normalized data by the first group of data in `data`.
 If `data` is an `AbstractArray`, in keyword argument `dims` dimensions can be specified
 over which norm is computed. For more see [`mynorm`](@ref)
 """
-function l2normalization!(data...; kwargs...)
-    nnorm = mynorm(first(data); kwargs...)
-    data isa AbstractArray ? zero = 0 : zero = zeros(length(nnorm))
-    [change!(d, zero, nnorm) for d in data]
-    return
-end
-
 function l2normalization!(data; kwargs...)
     nnorm = mynorm(data; kwargs...)
     data isa AbstractArray ? zero = 0 : zero = zeros(length(nnorm))
@@ -142,8 +129,60 @@ function l2normalization!(data; kwargs...)
     return
 end
 
-createzero(data::AbstractArray) = 0
-createzero(data::AbstractDataFrame) = zeros(length(nnorm))
+"""
+    selectnumeric(data::AbstractDataFrame)
+
+Returns array of number of columns which contain values of type `Number`.
+"""
+function selectnumeric(data::AbstractDataFrame)
+    n = Base.size(data, 2)
+    nums = Int[]
+
+    for i in 1:n-1
+        if eltype(data[:,i]) <: Number
+            append!(nums, i)
+        end
+    end
+
+    return nums
+end
+
+"""
+    selectnumeric(data::AbstractArray; dims::Int=1)
+
+Returns tuple array of number of columns or rows which contain values of type `Number` and
+other element of the tuple is `Colon`.
+"""
+function selectnumeric(data::AbstractArray; dims::Int=1)
+    nums = Int[]
+
+    if dims == 1
+        n = Base.size(data, 2)
+
+        for i in 1:n
+            if eltype(data[:,i]) <: Number
+                append!(nums, i)
+            end
+        end
+
+        return (:, nums)
+
+    elseif dims == 2
+        n = Base.size(data, 1)
+
+        for i in 1:n
+            if eltype(data[i,:]) <: Number
+                append!(nums, i)
+            end
+        end
+
+        return (nums,:)
+
+    else
+        throw.ArgumentError("Unsopported dimensions. (1 or 2 are accepted)")
+    end
+end
+
 """
     normalize(type, data... kwargs...)
 
@@ -158,26 +197,32 @@ for l2 normalization `type` is `:l2`, `:L2` or `:norm`.
 If `data` is an `AbstractArray`, a keyword argument `dims` can be provided to compute values
 over dimensions.
 """
-function normalize!(data...; type::Symbol=:Z, kwargs...)
+function normalize!(data::AbstractDataFrame; type::Symbol=:Z)
+    selection = selectnumeric(data)
+    display(selection)
     if type in (:z, :Z, :standardization, :standard)
-        standardization!(data...; kwargs...)
+        standardization!(data[!,selection])
     elseif type in (:minmax, :mm)
-        minmax!(data...; kwargs...)
+        minmax!(data[!, selection])
     elseif type in (:l2, :L2, :norm)
-        l2normalization!(data...; kwargs...)
+        l2normalization!(data[!, selection])
     end
     return
 end
 
-function labels(dataset::Tabular)
-    df = load(dataset)
-    return df[:,end]
-end
+# NOT FINISHED - not changing data!!!!!!!!!
+function normalize!(data::AbstractArray; type::Symbol=:standard, dims::Int=1)
+    selection = selectnumeric(data)
 
-
-function labels(dataset::MLImage)
-    datadep = getModule(dataset)
-    return datadep.trainlabels()
+    if type in (:z, :Z, :standardization, :standard)
+        standardization!(data[selection[1], selection[2]]; dims)
+    elseif type in (:minmax, :mm)
+        minmax!(data[selection[1], selection[2]]; dims)
+    elseif type in (:l2, :L2, :norm)
+        l2normalization!(data[selection[1], selection[2]]; dims)
+    end
+    display(data) # !!!!!!!!!!!! nothing
+    return
 end
 
 """

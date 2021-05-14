@@ -46,3 +46,14 @@ Returns image data.
 function postprocess(dataset::Image{MLImage}, data...; kwargs...)
     return data
 end
+
+# ---------------------- Other functions for manipulating header ---------------------- */
+"""
+    labels(dataset::MLImage)
+
+Returns train label array for given dataset.
+"""
+function labels(dataset::MLImage)
+    datadep = getModule(dataset)
+    return datadep.trainlabels()
+end
