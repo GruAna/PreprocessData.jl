@@ -6,9 +6,13 @@ using InteractiveUtils: subtypes
 using LinearAlgebra: norm
 using Statistics: mean, std
 
+export L2, MinMax, Std
+
 export split_traintest, split_trainvalidtest
 export load
-export normalize!, binarize, classes
+export normalize!, meanstd, minmax, l2norm
+export binarize, classes
+
 export listdatasets, info, remove
 
 const DATASET_DIR_TAB = joinpath(@__DIR__, "datasets/tabular")

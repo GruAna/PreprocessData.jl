@@ -1,4 +1,87 @@
+# --------------------- Functions for normalizing tabular datasets --------------------- */
+"""
+    normalize!(type::Type{Std}, data, mean, std; kwargs...)
+
+Returns standardized data by the specified mean and standard deviation.
+
+If `data` is an `AbstractArray`, in keyword argument `dims` dimensions can be specified
+over which mean and standard deviation are computed.
+"""
+function normalize!(type::Type{Std}, data, mean, std; kwargs...)
+    change!(data, mean, std)
+    return
+end
+
+"""
+    normalize!(type::Type{Std}, data; kwargs...)
+    [selection[1], selection[2]]
+Returns standardized data by the mean and variance of `data`.
+"""
+function normalize!(type::Type{Std}, data; kwargs...)
+    mean, std = meanstd(data; kwargs...)
+    normalize!(type, data, mean, std; kwargs...)
+    return
+end
+
+"""
+    normalize!(type::Type{MinMax}, data, min, max; kwargs...)
+
+Returns min-max scaled data based on specified minimum and maximum values.
+
+If `data` is an `AbstractArray`, in keyword argument `dims` dimensions can be specified
+over which (columns or rows) minimum and maximum are computed.
+"""
+function normalize!(type::Type{MinMax}, data, min, max; kwargs...)
+    change!(data, min, max)
+    return
+end
+
+"""
+    normalize!(type::Type{MinMax}, data; kwargs...)
+
+Returns min-max scaled data based on minimum and maximum values from `data`.
+"""
+function normalize!(type::Type{MinMax}, data; kwargs...)
+    min, max = minmax(data; kwargs...)
+    normalize!(type, data, min, max; kwargs...)
+    return
+end
+
+"""
+    normalize!(type::Type{L2}, data, norm)
+
+Returns normalized data by the specified `norm`.
+
+If `data` is an `AbstractArray`, in keyword argument `dims` dimensions can be specified
+over which norm is computed. For more see [`mynorm`](@ref)
+"""
+
+function normalize!(type::Type{L2}, data, norm; kwargs...)
+    change!(data, norm)
+    return
+end
+
+"""
+    normalize!(type::Type{L2}, data; kwargs...)
+
+Returns normalized data by the Euclidan norm of `data` elements.
+"""
+function normalize!(type::Type{L2}, data; kwargs...)
+    norm = l2norm(data; kwargs...)
+    normalize!(type, data, norm; kwargs...)
+    return
+end
+
 # ------------------ Util functions for normalizing tabular datasets ------------------- */
+"""
+    _select(data, selection)
+
+    Returns data, range specified by `selection`.
+"""
+_select(data::AbstractArray, selection) = data[selection[1], selection[2]]
+
+_select(data::AbstractDataFrame, selection) = data[!, selection]
+
 """
     meanstd(data; dims::Int=1)
 
@@ -13,10 +96,12 @@ over dimensions.
 This function uses `mean` and `std` from the package `Statistics`.
 """
 function meanstd(data::AbstractArray; dims::Int=1)
-    mean(data; dims=dims), std(data; dims=dims)
+    selected = _select(data, selectnumeric(data; dims=dims))
+    mean(selected; dims=dims), std(selected; dims=dims)
 end
 function meanstd(data::AbstractDataFrame)
-    mean.(eachcol(data)), std.(eachcol(data))
+    selected = _select(data, selectnumeric(data))
+    mean.(eachcol(selected)), std.(eachcol(selected))
 end
 
 """
@@ -31,66 +116,64 @@ makerow(vec::AbstractArray) = Base.size(vec, 1) == 1 ? vec : permutedims(vec)
     change(data, substracted, divided)
 
 Changes `data` elements following a formula: `data .- substracted ./ devided`.
-
-If `data` is an `AbstractArray`, changes all elements.
-If `data` is an `AbstractDataFrame`, changes elements in all columns except last one.
 """
-function change!(data::AbstractArray, substracted, devided; dims=1)
-    data .= (data .- substracted) ./ devided
-    display(data)
+function change!(data::AbstractArray, substracted, devided)
+    selection = selectnumeric(data)
+    data[selection[1], selection[2]] .= (data[selection[1], selection[2]] .- substracted) ./ devided
     return
 end
 
 function change!(data::AbstractDataFrame, substracted, devided)
-    n = length(substracted)
+    selected = _select(data, selectnumeric(data))
+    n = length(devided)
+
     for i in 1:n
-        data[:,i] .= (data[:,i] .- substracted[i]) ./ devided[i]
+        selected[:,i] .= (selected[:,i] .- substracted[i]) ./ devided[i]
     end
+
     return
 end
 
 """
-    standardization(data...; kwargs...)
+    change(data, divided)
 
-Returns normalized data by the first group of data in `data` using mean and variance.
-
-If `data` is an `AbstractArray`, in keyword argument `dims` dimensions can be specified
-over which mean and standard deviation are computed.
+Changes `data` elements following a formula: `data ./ devided`.
 """
-function standardization!(data; kwargs...)
-    nmean, nstd = meanstd(data; kwargs...)
-    change!(data, nmean, nstd)
+function change!(data::AbstractArray, devided)
+    selection = selectnumeric(data)
+    data[selection[1], selection[2]] .= data[selection[1], selection[2]] ./ devided
     return
 end
 
+function change!(data::AbstractDataFrame, devided)
+    selected = _select(data, selectnumeric(data))
+    n = length(devided)
+
+    for i in 1:n
+        selected[:,i] .= selected[:,i] ./ devided[i]
+    end
+
+    return
+end
 
 """
-    minimaxi(data; dims=1)
+    minmax(data; dims=1)
 
 Returns minimum and maximum of columns or rows of given `data`.
 If `data` is an `AbstractArray`, `dims` specifies whether it is over columns or rows.
 """
-minimaxi(data::AbstractArray; dims=1) = minimum(data; dims=dims), maximum(data; dims=dims)
+function minmax(data::AbstractArray; dims::Int=1)
+    selected = _select(data, selectnumeric(data))
+    minimum(selected; dims=dims), maximum(selected; dims=dims)
+end
 
-minimaxi(data::AbstractDataFrame) = minimum.(eachcol(data)), maximum.(eachcol(data))
-
-
-"""
-    minmax(data...; kwargs...)
-
-Returns min-max scaled data by the first group of data in `data`.
-
-If `data` is an `AbstractArray`, in keyword argument `dims` dimensions can be specified
-over which (columns or rows) minimum and maximum are computed.
-"""
-function minmax!(data; kwargs...)
-    nmin, nmax = minimaxi(data; kwargs...)
-    change!(data, nmin, nmax-nmin)
-    return
+function minmax(data::AbstractDataFrame)
+    selected = _select(data, selectnumeric(data))
+    minimum.(eachcol(selected)), maximum.(eachcol(selected))
 end
 
 """
-    mynorm(data; dims)
+    norms(data; dims)
 
 Returns norm of columns or rows of given `data`.
 
@@ -100,33 +183,20 @@ for columns.
 
 This function uses `norm` from the package `LinearAlgebra`.
 """
-function mynorm(data::AbstractArray; dims::Int=1)
+function l2norm(data::AbstractArray; dims::Int=1)
+    selected = _select(data, selectnumeric(data))
     if dims == 1    #by columns
-        return makerow(norm.(eachcol(data)))
+        return makerow(norm.(eachcol(selected)))
     elseif dims == 2
-        return norm.(eachrow(data))
+        return norm.(eachrow(selected))
     else
         throw(ArgumentError("Wrong dimensions."))
     end
 end
 
-function mynorm(data::AbstractDataFrame)
-    return norm.(eachcol(data))
-end
-
-"""
-    l2normalization(data...; kwargs...)
-
-Returns normalized data by the first group of data in `data`.
-
-If `data` is an `AbstractArray`, in keyword argument `dims` dimensions can be specified
-over which norm is computed. For more see [`mynorm`](@ref)
-"""
-function l2normalization!(data; kwargs...)
-    nnorm = mynorm(data; kwargs...)
-    data isa AbstractArray ? zero = 0 : zero = zeros(length(nnorm))
-    change!(data, zero, nnorm)
-    return
+function l2norm(data::AbstractDataFrame)
+    selected = _select(data, selectnumeric(data))
+    return norm.(eachcol(selected))
 end
 
 """
@@ -181,48 +251,6 @@ function selectnumeric(data::AbstractArray; dims::Int=1)
     else
         throw.ArgumentError("Unsopported dimensions. (1 or 2 are accepted)")
     end
-end
-
-"""
-    normalize(type, data... kwargs...)
-
-Normalizes given `data` by the first group of data in `data`.
-
-# Keyword arguments
--`type::Symbol=:Z`: specify which feature scaling is used. For standardization, `type` is
-`:standardization`,`:standard`,`:z` or `:Z`. For minmax scaling `type` is `:minmax` or `:mm`,
-for l2 normalization `type` is `:l2`, `:L2` or `:norm`.
--`data` can be `AbstractArray` or `AbstractDataFrame`.
-
-If `data` is an `AbstractArray`, a keyword argument `dims` can be provided to compute values
-over dimensions.
-"""
-function normalize!(data::AbstractDataFrame; type::Symbol=:Z)
-    selection = selectnumeric(data)
-    display(selection)
-    if type in (:z, :Z, :standardization, :standard)
-        standardization!(data[!,selection])
-    elseif type in (:minmax, :mm)
-        minmax!(data[!, selection])
-    elseif type in (:l2, :L2, :norm)
-        l2normalization!(data[!, selection])
-    end
-    return
-end
-
-# NOT FINISHED - not changing data!!!!!!!!!
-function normalize!(data::AbstractArray; type::Symbol=:standard, dims::Int=1)
-    selection = selectnumeric(data)
-
-    if type in (:z, :Z, :standardization, :standard)
-        standardization!(data[selection[1], selection[2]]; dims)
-    elseif type in (:minmax, :mm)
-        minmax!(data[selection[1], selection[2]]; dims)
-    elseif type in (:l2, :L2, :norm)
-        l2normalization!(data[selection[1], selection[2]]; dims)
-    end
-    display(data) # !!!!!!!!!!!! nothing
-    return
 end
 
 """
