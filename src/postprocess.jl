@@ -14,8 +14,11 @@ end
 
 """
     normalize!(type::Type{Std}, data; kwargs...)
-    [selection[1], selection[2]]
+
 Returns standardized data by the mean and variance of `data`.
+
+If `data` is an `AbstractArray`, in keyword argument `dims` dimensions can be specified
+over which mean and standard deviation are computed.
 """
 function normalize!(type::Type{Std}, data; kwargs...)
     mean, std = meanstd(data; kwargs...)
@@ -40,6 +43,9 @@ end
     normalize!(type::Type{MinMax}, data; kwargs...)
 
 Returns min-max scaled data based on minimum and maximum values from `data`.
+
+If `data` is an `AbstractArray`, in keyword argument `dims` dimensions can be specified
+over which mean and standard deviation are computed.
 """
 function normalize!(type::Type{MinMax}, data; kwargs...)
     min, max = minmax(data; kwargs...)
@@ -53,7 +59,7 @@ end
 Returns normalized data by the specified `norm`.
 
 If `data` is an `AbstractArray`, in keyword argument `dims` dimensions can be specified
-over which norm is computed. For more see [`mynorm`](@ref)
+over which norm is computed. For more see [`l2norm`](@ref)
 """
 
 function normalize!(type::Type{L2}, data, norm; kwargs...)
@@ -65,6 +71,9 @@ end
     normalize!(type::Type{L2}, data; kwargs...)
 
 Returns normalized data by the Euclidan norm of `data` elements.
+
+If `data` is an `AbstractArray`, in keyword argument `dims` dimensions can be specified
+over which mean and standard deviation are computed.
 """
 function normalize!(type::Type{L2}, data; kwargs...)
     norm = l2norm(data; kwargs...)
@@ -105,59 +114,7 @@ function meanstd(data::AbstractDataFrame)
 end
 
 """
-    makerow(vec::Matrix)
-
-For matrix permutes dimensions (makes a row vector from column vector). If `vec` is already
-a row vector then does nothing.
-"""
-makerow(vec::AbstractArray) = Base.size(vec, 1) == 1 ? vec : permutedims(vec)
-
-"""
-    change(data, substracted, divided)
-
-Changes `data` elements following a formula: `data .- substracted ./ devided`.
-"""
-function change!(data::AbstractArray, substracted, devided)
-    selection = selectnumeric(data)
-    data[selection[1], selection[2]] .= (data[selection[1], selection[2]] .- substracted) ./ devided
-    return
-end
-
-function change!(data::AbstractDataFrame, substracted, devided)
-    selected = _select(data, selectnumeric(data))
-    n = length(devided)
-
-    for i in 1:n
-        selected[:,i] .= (selected[:,i] .- substracted[i]) ./ devided[i]
-    end
-
-    return
-end
-
-"""
-    change(data, divided)
-
-Changes `data` elements following a formula: `data ./ devided`.
-"""
-function change!(data::AbstractArray, devided)
-    selection = selectnumeric(data)
-    data[selection[1], selection[2]] .= data[selection[1], selection[2]] ./ devided
-    return
-end
-
-function change!(data::AbstractDataFrame, devided)
-    selected = _select(data, selectnumeric(data))
-    n = length(devided)
-
-    for i in 1:n
-        selected[:,i] .= selected[:,i] ./ devided[i]
-    end
-
-    return
-end
-
-"""
-    minmax(data; dims=1)
+    minmax(data; dims::Int=1)
 
 Returns minimum and maximum of columns or rows of given `data`.
 If `data` is an `AbstractArray`, `dims` specifies whether it is over columns or rows.
@@ -173,7 +130,7 @@ function minmax(data::AbstractDataFrame)
 end
 
 """
-    norms(data; dims)
+    l2norm(data; dims::Int=1)
 
 Returns norm of columns or rows of given `data`.
 
@@ -253,6 +210,59 @@ function selectnumeric(data::AbstractArray; dims::Int=1)
     end
 end
 
+"""
+    makerow(vec::Matrix)
+
+For matrix permutes dimensions (makes a row vector from column vector). If `vec` is already
+a row vector then does nothing.
+"""
+makerow(vec::AbstractArray) = Base.size(vec, 1) == 1 ? vec : permutedims(vec)
+
+"""
+    change(data, substracted, divided)
+
+Changes `data` elements following a formula: `data .- substracted ./ devided`.
+"""
+function change!(data::AbstractArray, substracted, devided)
+    selection = selectnumeric(data)
+    data[selection[1], selection[2]] .= (data[selection[1], selection[2]] .- substracted) ./ devided
+    return
+end
+
+function change!(data::AbstractDataFrame, substracted, devided)
+    selected = _select(data, selectnumeric(data))
+    n = length(devided)
+
+    for i in 1:n
+        selected[:,i] .= (selected[:,i] .- substracted[i]) ./ devided[i]
+    end
+
+    return
+end
+
+"""
+    change!(data, divided)
+
+Changes `data` elements following a formula: `data ./ devided`.
+"""
+function change!(data::AbstractArray, devided)
+    selection = selectnumeric(data)
+    data[selection[1], selection[2]] .= data[selection[1], selection[2]] ./ devided
+    return
+end
+
+function change!(data::AbstractDataFrame, devided)
+    selected = _select(data, selectnumeric(data))
+    n = length(devided)
+    _sele
+    for i in 1:n
+        selected[:,i] .= selected[:,i] ./ devided[i]
+    end
+
+    return
+end
+
+# ------------------ Util functions for binarizing tabular datasets -------------------- */
 """
     classes(dataset)
 
