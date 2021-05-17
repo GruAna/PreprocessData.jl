@@ -4,19 +4,18 @@ name(dataset::Image{MLImage}) = String(nameof(typeof(dataset)))
 # ---------------------------- Util functions for splitting ---------------------------- */
 
 """
-    getdata(dataset::Image{MLImage}, type::Symbol)
+    getdata(dataset::Image{MLImage}, type::Type{<:Split})
 
-Returns data from dataset. `type` is either `:train` or `:test.`
+Returns data from dataset. `type` is either `Train` or `Test.`
 """
-function getdata(dataset::Image{MLImage}, type::Symbol=:train)
+function getdata(dataset::Image{MLImage}, type::Type{Train})
     datadep = getModule(dataset)
-    if type == :train
-        return datadep.traindata()
-    elseif type == :test
-        return datadep.testdata()
-    else
-        throw(ArgumentError("Unknown type of data."))
-    end
+    return datadep.traindata()
+end
+
+function getdata(dataset::Image{MLImage}, type::Type{Test})
+    datadep = getModule(dataset)
+    return datadep.testdata()
 end
 
 """
@@ -24,9 +23,9 @@ end
 
 Loads dataset of given type.
 
-- `type::Symbol`: default type is `:train`, other possible types are `test` and `valid`.
+- `type::Type{<:Split}=Train`: other possible type is `Test`.
 """
-load(dataset::Image{<:ImageType}, type::Symbol=:train) = getdata(dataset, type)
+load(dataset::Image{<:ImageType}, type::Type{<:Split}=Train) = getdata(dataset, type)
 
 """
     splits(dataset::Image{MLImage}, data, indeces1, indeces2)

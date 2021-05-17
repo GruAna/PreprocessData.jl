@@ -20,3 +20,8 @@ abstract type Normalization end
 abstract type L2 <: Normalization end
 abstract type Std <: Normalization end
 abstract type MinMax <: Normalization end
+
+abstract type Split end
+abstract type Train <: Split end
+abstract type Valid <: Split end
+abstract type Test <: Split end

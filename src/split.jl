@@ -37,15 +37,15 @@ function split_traintest(
     if size(dataset)[3] > 0
         @info "Dataset $dsName already separated."
 
-        train = getdata(dataset, :train)
-        test = getdata(dataset, :test)
+        train = getTraindata(dataset, Train)
+        test = getdata(dataset, Test)
 
         # in this case there shall be only train data that needs to be separated to train
         # and test. (we are not interested in valid data in this case)
     else
         @info "Dataset $dsName has only train data. Separating test data from train data."
 
-        train = getdata(dataset, :train)
+        train = getdata(dataset, Train)
         indecesTrain, indecesTest = shuffle_indeces(size(dataset)[1], trainSize, seed)
         train, test = splits(dataset, train, indecesTrain, indecesTest)
     end
@@ -94,17 +94,17 @@ function split_trainvalidtest(
     if size(dataset)[2] != 0 && size(dataset)[3] != 0
         @info "Dataset $dsName already separated."
 
-        train = getdata(dataset, :train)
-        valid = getdata(dataset, :valid)
-        test = getdata(dataset, :test)
+        train = getdata(dataset, Train)
+        valid = getdata(dataset, Valid)
+        test = getdata(dataset, Test)
 
     # If train and validation data are present in the directory but no test data.
     # Create test data from train data.
     elseif size(dataset)[2] != 0 && size(dataset)[3] == 0
         @info "Dataset $dsName already has data for validation, now separating test data."
 
-        train = getdata(dataset, :train)
-        valid = getdata(dataset, :valid)
+        train = getdata(dataset, Train)
+        valid = getdata(dataset, Valid)
 
         #create indeces for separation data for train and test
         indecesTrain, indecesTest = shuffle_indeces(size(dataset)[1], trainSize, seed)
@@ -115,8 +115,8 @@ function split_trainvalidtest(
     elseif size(dataset)[3] != 0
         @info "Dataset $dsName already has data for testing, now separating validation data."
 
-        train = getdata(dataset, :train)
-        test = getdata(dataset, :test)
+        train = getdata(dataset, Train)
+        test = getdata(dataset, Test)
 
         #create indeces for separation data for train and test
         indecesValid, indecesTrain = shuffle_indeces(size(dataset)[1], validSize, seed)
@@ -124,7 +124,7 @@ function split_trainvalidtest(
     else
         @info "Dataset $dsName has only train data. Separating test and validation data from train data."
 
-        train = getdata(dataset, :train)
+        train = getdata(dataset, Train)
 
         #create indeces for separation data for train and test
         indecesTrain, indecesTest = shuffle_indeces(size(dataset)[1], trainSize, seed)

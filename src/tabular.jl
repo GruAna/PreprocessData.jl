@@ -30,35 +30,30 @@ transposed(dataset::Tabular) = false
 
 # ---------------------------- Util functions for splitting ---------------------------- */
 """
-    getdata(dataset::Tabular, type::Symbol)
+    getdata(dataset::Tabular, type::Type{<:Split})
 
-Returns data from dataset. `type` is either `:train`, `:test.` or `:valid`.
+Returns data from dataset. `type` is either `Train`, `Test.` or `Valid`.
 """
-function getdata(
-    dataset::Tabular,
-    type::Symbol=:train,
-    )
-    path = getpath(dataset)       # path to a directory of given datadep
-
-    if type == :test
-        file = "data-test.csv"
-    elseif type == :valid
-        file = "data-valid.csv"
-    else
-        file = "data-train.csv"
-    end
-    df = CSV.File(joinpath(path, file), header = true) |> DataFrame
-
-    return df
+function getdata(dataset::Tabular, type::Type{Train})
+    return CSV.File(joinpath(getpath(dataset) , "data-train.csv"), header=true) |> DataFrame
 end
 
+function getdata(dataset::Tabular, type::Type{Valid})
+    return CSV.File(joinpath(getpath(dataset) , "data-valid.csv"), header=true) |> DataFrame
+end
+
+function getdata(dataset::Tabular, type::Type{Test})
+    return CSV.File(joinpath(getpath(dataset) , "data-test.csv"), header=true) |> DataFrame
+end
+# getpath(dataset) - path to a directory of given datadep
+
 """
-    load(dataset::Tabular, type::Symbol; kwargs...)
+    load(dataset::Tabular, type::Type{<:Split}; kwargs...)
 
 Loads dataset of given type. Type based on filenames in datadeps folder (types available
-only if the dataset was splitted before downloading.)
+only if the dataset was splitted before downloading, else the whole dataset is of type `Train`)
 
-- `type::Symbol`: default type is `:train`, other possible types are `test` and `valid`.
+- `type::Type{<:Split}=Train`: other possible types are `Test` or `Valid`.
 
 # Keywords
 - `toarray::Bool=false`: if false returns `DataFrame`, else returns `Tuple` of arrays
@@ -67,7 +62,7 @@ dataset (it they are found), else default column naming is returned.
 """
 function load(
     dataset::Tabular,
-    type::Symbol=:train;
+    type::Type{<:Split}=Train;
     toarray::Bool=false,
     header::Bool=false,
     )
