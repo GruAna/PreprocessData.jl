@@ -7,6 +7,7 @@ using LinearAlgebra: norm
 using Statistics: mean, std
 
 export L2, MinMax, Std
+export Train, Valid, Test
 
 export split_traintest, split_trainvalidtest
 export load
