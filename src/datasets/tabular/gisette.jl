@@ -16,7 +16,7 @@ function checksum(::Gisette)
         "6d4c5e998afe67937b9e77a3334e03c85e545ebc65a6eb1333ffc14125cfc389"
     ]
 end
-function preprocess(::Gisette)
+function prep(::Gisette)
     [
         path -> preprocess(path, :labels),
         path -> preprocess(path, Gisette()),

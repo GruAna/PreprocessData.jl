@@ -24,7 +24,7 @@ function registering(dsName::DatasetName)
         """,
         url(dsName),
         checksum(dsName),
-        post_fetch_method = preprocess(dsName)
+        post_fetch_method = prep(dsName)
     ))
 end
 
