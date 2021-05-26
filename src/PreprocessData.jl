@@ -8,6 +8,7 @@ using Statistics: mean, std
 
 export L2, MinMax, Std
 export Train, Valid, Test
+export Image, Tabular, GrayImage, ColorImage, Regression, Classification
 
 export split_traintest, split_trainvalidtest
 export load

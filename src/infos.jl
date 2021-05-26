@@ -28,40 +28,21 @@ function printproblemtypes(P::Type)
 end
 
 """
-    listdatasets(which::Symbol=:all)
+    listdatasets()
 
-Print datatsets in a tree structure.
-
-# Arguments
-Argument `which` can be:
-- `:all`: default value, prints all datasets to the PreprocessData pac,age,
-- `:image` or `:i`: prints all known image datasets,
-- `:tabular` or `:t`: prints all known tabular datasets,
-- `:classification` or `:c`: prints all known datasets for classification problem,
-- `:regression` or `:r`: prints all known datasets for regression problem,
-anything else thorws an error.
+Print datatsets in a tree structure. Prints all datasets of the PreprocessData package.
 """
-function listdatasets(which::Symbol=:all)
-    print("\nPreprocessData ")
-    if which == :all
-        println("all datasets:")
-        printsubtypes(DatasetName)
-    elseif which == :image || which == :i
-        println("image datasets:")
-        printsubtypes(Image,  1)
-    elseif which == :tabular || which == :t
-        println("tabular datasets:")
-        printsubtypes(Tabular, 1)
-    elseif which == :classification || which == :c
-        println("classification datasets:")
-        printproblemtypes(Classification)
-    elseif which == :regression which == :r
-        println("regression datasets:")
-        printproblemtypes(Regression)
-    else
-        throw(ArgumentError("Bad identifier."))
-    end
-end
+listdatasets() = printsubtypes(DatasetName)
+
+"""
+    listdatasets(type)
+
+Print datatsets in a tree structure. Prints all datasets of given type known to PreprocessData
+package. Type can be any subtype of `DatasetName` or `Classifacation` or `Regression`.
+"""
+listdatasets(type::Type{T} where T <: DatasetName) = printsubtypes(type,  1)
+
+listdatasets(type::Type{T} where T <: Problem) = printproblemtypes(type)
 
 """
     info(dataset::DatasetName)
