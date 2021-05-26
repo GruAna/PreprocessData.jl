@@ -18,12 +18,12 @@ function checksum(::Gisette)
 end
 function prep(::Gisette)
     [
-        path -> preprocess(path, :labels),
+        path -> preprocess(path, Labels),
         path -> preprocess(path, Gisette()),
-        path -> preprocess(path, :labels),
+        path -> preprocess(path, Labels),
         path -> preprocess(path, Gisette())
     ]
 end
-target(::Gisette) = "labels"
+target(::Gisette) = Labels
 size(::Gisette) = (6000, 1000, 0)
 problem(::Gisette) = Classification

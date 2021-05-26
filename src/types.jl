@@ -11,6 +11,9 @@ abstract type GrayImage{T <: ImageType} <: Image{T} end
 abstract type ColorImage{T <: ImageType} <: Image{T} end
 
 # -------------------------------------------------------------------------------------- */
+abstract type File end
+abstract type Labels <: File end
+abstract type Header <: File end
 
 abstract type Problem end
 abstract type Classification <: Problem end

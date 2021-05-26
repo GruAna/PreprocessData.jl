@@ -80,14 +80,14 @@ function preprocess(
         save_header(headers(dataset), path)
     end
 
+
     # place target column
-    col = target(dataset)    #target column, either Int or String "labels"
+    col = target(dataset)    #target column, either Int or Type{File}
 
-    if col isa String
-        col = string("labels-", typeSplit)
-    end
+    name = getfilename(path)
+    typeSplit = find_in(name)
 
-    df = place_target(col, df)
+    df = place_target(col, df, typeSplit)
 
     categorical_cols = categorical(dataset)
     for i in categorical_cols
@@ -95,8 +95,6 @@ function preprocess(
     end
 
     ext = extension(dataset)
-    name = getfilename(path)
-    typeSplit = find_in(name)
 
     pathForSave = joinpath(dirname(path), string("data-",typeSplit,".",ext))
     CSV.write(pathForSave, df, delim=',', writeheader=true)
@@ -119,7 +117,7 @@ end
 
 Moves column from its position to last position in `DataFrame` df.
 """
-function place_target(column::Int, df::AbstractDataFrame)
+function place_target(column::Int, df::AbstractDataFrame, ::AbstractString)
     lastColIndex = ncol(df)
 
     if column > 0 || column < lastColIndex
@@ -136,12 +134,12 @@ function place_target(column::Int, df::AbstractDataFrame)
 end
 
 """
-    place_target(fileName::AbstractString, df::AbstractDataFrame)
+    place_target(::Type{Labels}, df::AbstractDataFrame, typeSplit::AbstractString)
 
 Pushes column with labels from a file to last position in `DataFrame` df.
 """
-function place_target(fileName::AbstractString, df::AbstractDataFrame)
-    pathLabels = joinpath(pwd(), fileName)
+function place_target(::Type{Labels}, df::AbstractDataFrame, typeSplit::AbstractString)
+    pathLabels = joinpath(pwd(), string("labels-", typeSplit))
     dfLabels = CSV.File(
         pathLabels,
         header = ["Target"],
@@ -156,26 +154,24 @@ function place_target(fileName::AbstractString, df::AbstractDataFrame)
 end
 
 """
-    preprocess(path::AbstractString, type::Symbol)
+    preprocess(path::AbstractString, ::Type{Labels})
 
-Renames downloaded file based on type.
-
-If type is `:labels`,`label` or `:target` (used for file containing labels) file is renamed.
-For labels filename has format labels-typeSplit.csv. For typeSplit see [`find_in`](@ref).
-If type is `:header` or `:headers` (used for file containing header) file is renamed.
-For header filename has format header.csv.
+Renames downloaded file with labels based on type. Filename has format labels-typeSplit.csv.
+For typeSplit see [`find_in`](@ref).
 """
-function preprocess(path::AbstractString, type::Symbol)
-    if type == :labels || type == :label || type == :target
-        typeSplit = find_in(getfilename(path))
-        mv(basename(path), string("labels-", typeSplit))
-    elseif type == :header || type == :headers
-        mv(basename(path), string("header.csv"))
-    else
-        throw(ArgumentError("Unknown type for preprocess."))
-    end
+function preprocess(path::AbstractString, ::Type{Labels})
+    typeSplit = find_in(getfilename(path))
+    mv(basename(path), string("labels-", typeSplit))
 end
 
+"""
+    preprocess(path::AbstractString, ::Type{Header})
+
+Renames downloaded file with header to header.csv.
+"""
+function preprocess(path::AbstractString, ::Type{Header})
+    mv(basename(path), string("header.csv"))
+end
 """
     find_in(name::AbstractString)
 
