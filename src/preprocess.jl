@@ -1,4 +1,5 @@
 function preprocess(::DatasetName) end
+message(::DatasetName) = ""
 extension(dn::DatasetName) = extension(dn)
 extension(::Tabular) = "csv"
 
@@ -21,9 +22,10 @@ function registering(dsName::DatasetName)
         """
             Dataset: $(name(dsName))
             Website: $(url(dsName))
+            $(message(dsName))
         """,
         url(dsName),
-        checksum(dsName),
+        # checksum(dsName),
         post_fetch_method = prep(dsName)
     ))
 end
