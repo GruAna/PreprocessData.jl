@@ -25,7 +25,7 @@ function registering(dsName::DatasetName)
             $(message(dsName))
         """,
         url(dsName),
-        # checksum(dsName),
+        checksum(dsName),
         post_fetch_method = prep(dsName)
     ))
 end
