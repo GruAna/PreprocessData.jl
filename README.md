@@ -52,7 +52,7 @@ categorical(::Example) = 1:3
 ```julia
 message(::Example) = "Example dataset was created by me."
 ```
-> Additional information about the dataset, that is displayed before downloading.
+> Additional information about the dataset that is displayed before downloading.
 
 If more than one file are to be downloaded `url`, `checksum` should contain a vector with values.
 
@@ -72,7 +72,8 @@ Split functions have keyword arguments set with these values `trainSize=0.8, val
 - `binarize(labeldata, positivelabels)`
 - `info(PreprocessData.Iris())`: prints information about dataset.
 - `listdatasets(type)`: Print known datasets of given type in a tree structure. 
-"""
+- `remove(PreprocessData.Iris())`: deletes folder containing the Iris dataset.
 
+**Note:** Datasets are represented as types, however these types are not exported to use the dataset type, one must prepend `PreprocessData.`
 
 
