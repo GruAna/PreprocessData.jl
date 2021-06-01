@@ -56,11 +56,12 @@ function info(dataset::Tabular)
     text = """
         Target column:  $(target(dataset))
         Problem type:   $(nameof(problem(dataset)))
+        Source:         $(url(dataset))
     """
     println(infotext(dataset),text)
 end
 
-function info(dataset::MLImage)
+function info(dataset::Image{MLImage})
     printstyled("\n$dataset\n"; bold=true, color=:light_yellow)
     println(infotext(dataset))
 end
