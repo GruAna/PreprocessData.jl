@@ -11,13 +11,9 @@ headers(dataset::Tabular) = ""
 """
     target(::Tabular)
 
-Returns order of target column.
-
-Default target for `Tabular` datasets is last column. It can be different number for every
-dataset, so we mark it as zero and remember it for later use.
-Target should be always specified manually in dataset.jl file.
+Returns order of target column, else throws error.
 """
-target(dataset::Tabular) = 0
+target(dataset::Tabular) = throw(ErrorException("Target value not specified for $dataset dataset."))
 
 """
     categorical(::Tabular)
