@@ -1,5 +1,7 @@
 function getModule(::Image{MLImage}) end
 name(dataset::Image{MLImage}) = String(nameof(typeof(dataset)))
+url(dataset::Image{MLImage}) = @info "URL address for $dataset can be found in MLDatasets.jl."
+
 
 # ---------------------------- Util functions for splitting ---------------------------- */
 
@@ -46,7 +48,6 @@ function postprocess(dataset::Image{MLImage}, data...; kwargs...)
     return data
 end
 
-# ---------------------- Other functions for manipulating header ---------------------- */
 """
     labels(dataset::MLImage)
 

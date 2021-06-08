@@ -1,5 +1,4 @@
 function preprocess(::DatasetName) end
-message(::DatasetName) = ""
 extension(dn::DatasetName) = extension(dn)
 extension(::Tabular) = "csv"
 
@@ -11,35 +10,6 @@ and create a csv file, see [`preprocess?`](@ref)).
 """
 call(dataset::DatasetName) = @datadep_str name(dataset)
 
-"""
-    registering(dsName::DatasetName)
-
-Create a registration block for DataDeps package.
-"""
-function registering(dsName::DatasetName)
-    DataDeps.register(DataDep(
-        name(dsName),
-        """
-            Dataset: $(name(dsName))
-            Website: $(url(dsName))
-            $(message(dsName))
-        """,
-        url(dsName),
-        checksum(dsName),
-        post_fetch_method = prep(dsName)
-    ))
-end
-
-"""
-    extract(path)
-
-Extracts file using `DataDeps.unpack` function and returns path to the new extracted file.
-"""
-function extract(path)
-    newPath = splitext(path)[1]
-    DataDeps.unpack(path)
-    return newPath
-end
 
 """
     preprocess(path, dataset, header, kwargs...)

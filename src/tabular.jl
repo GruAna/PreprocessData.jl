@@ -13,7 +13,7 @@ headers(dataset::Tabular) = ""
 
 Returns order of target column, else throws error.
 """
-target(dataset::Tabular) = throw(ErrorException("Target value not specified for $dataset dataset."))
+target(dataset::Tabular) = error("Target value not specified for $dataset dataset.")
 
 """
     categorical(::Tabular)
