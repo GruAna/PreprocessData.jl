@@ -55,7 +55,6 @@ function info(dataset::Tabular)
     printstyled("\n$dataset\n"; bold=true, color=:light_yellow)
     text = """
         Target column:  $(target(dataset))
-        Problem type:   $(nameof(problem(dataset)))
         Source:         $(url(dataset))
     """
     println(infotext(dataset),text)
@@ -79,6 +78,7 @@ function infotext(dataset::DatasetName)
         Size:           $(PreprocessData.size(dataset)[1]) (train data)
                         $(PreprocessData.size(dataset)[2]) (valid data)
                         $(PreprocessData.size(dataset)[3]) (test data)
+        Problem type:   $(nameof(problem(dataset)))
     """
 end
 
@@ -89,4 +89,40 @@ Removes dataset directory.
 """
 function remove(dataset::DatasetName)
     rm(@datadep_str name(dataset); recursive=true)
+end
+
+"""
+    isdownloaded(dataset::DatasetName)
+
+Returns true if file data-train.csv is present in dataset directory.
+"""
+function isdownloaded(dataset::DatasetName)
+    path = joinpath(download_dir(),name(dataset))
+    return isdir(path)
+end
+
+# Variation on function determine_save_path(name, rel=nothing) from DataDeps.jl (file
+# locations.jl). Here are no arguments, returns path to directory where DataDeps files are
+# downloaded (usually something like "/home/user/.julia/datadeps")
+"""
+    download_dir()
+
+Determines the location to save all datadeps. Same as function from `DataDeps.jl` (see the
+original function [`DataDeps.determine_save_path`](@ref).)
+"""
+function download_dir()
+    rel=nothing;
+    cands = DataDeps.preferred_paths(rel; use_package_dir=false)
+    path_ind = findfirst(cands) do path
+        0 == first(DataDeps.uv_access(path, DataDeps.W_OK))
+    end
+    if path_ind === nothing
+            @error """
+            No writable path exists to save the data. Make sure there exists as writable path in your DataDeps Load Path.
+            See https://www.oxinabox.net/DataDeps.jl/stable/z10-for-end-users/#The-Load-Path-1
+            The current load path contains:
+            """ cands
+        throw(DataDeps.NoValidPathError("No writable path exists to save the data."))
+    end
+    return String(cands[path_ind])
 end
