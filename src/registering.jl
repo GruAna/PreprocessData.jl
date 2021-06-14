@@ -1,10 +1,10 @@
-name(dataset::DatasetName) = lowercasefirst(String(nameof(typeof(dataset))))
+name(dataset::DatasetName) = lowercase(String(nameof(typeof(dataset))))
 url(dataset::DatasetName) = error("URL address not specified for $dataset dataset.")
 checksum(::DatasetName) = ""
 size(::DatasetName) = error("Size not specified for $dataset dataset.")
 problem(::DatasetName) = error("Type of problem not specified for $dataset dataset.")
 message(::DatasetName) = ""
-
+function prep(::DatasetName) end
 
 """
     registering(dsName::DatasetName)

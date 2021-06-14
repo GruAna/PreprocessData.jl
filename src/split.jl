@@ -37,7 +37,7 @@ function split_traintest(
     if size(dataset)[3] > 0
         @info "Dataset $dsName already separated."
 
-        train = getTraindata(dataset, Train)
+        train = getdata(dataset, Train)
         test = getdata(dataset, Test)
 
         # in this case there shall be only train data that needs to be separated to train
