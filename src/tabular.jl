@@ -28,7 +28,7 @@ transposed(dataset::Tabular) = false
 """
     getdata(dataset::Tabular, type::Type{<:Split})
 
-Returns data from dataset. `type` is either `Train`, `Test.` or `Valid`.
+Returns data from dataset. `type` is either `Train`, `Test` or `Valid`.
 """
 function getdata(dataset::Tabular, type::Type{Train})
     return CSV.File(joinpath(getpath(dataset) , "data-train.csv"), header=true) |> DataFrame
@@ -135,7 +135,7 @@ function loadheader(path::String, dataset::Tabular)
         df = CSV.File(path, header = false) |> DataFrame
         targ = target(dataset)
         header = Array(df[:,1])
-        if targ != 0   # if targ == 0 it was assumed that it is the last col
+        if targ isa Int
             push!(header, header[targ])
             header = header[Not(targ)]
         end

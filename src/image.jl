@@ -20,6 +20,8 @@ function getdata(dataset::Image{MLImage}, type::Type{Test})
     return datadep.testdata()
 end
 
+getdata(dataset::Image{MLImage}, type::Type{Valid}) = error("No valid data in image datasets from MLDatasets.jl.")
+
 """
     load(dataset::Image, type::Symbol; kwargs...)
 
