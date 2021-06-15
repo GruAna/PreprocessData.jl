@@ -139,6 +139,7 @@ function loadheader(path::String, dataset::Tabular)
         end
         return header
     else
+        @info "No file with header (column names) found."
         return ""
     end
 end
@@ -160,9 +161,7 @@ Changes header of `DataFrame` of given dataset, id there is a header.
 """
 function changeheader(dataset::Tabular, df::DataFrame)
     hds = getheader(dataset)
-    if isempty(hds)
-        @info "No file with header (column names) found."
-    else
+    if !isempty(hds)
         new_header(hds, df)
     end
 end

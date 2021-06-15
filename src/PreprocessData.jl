@@ -11,7 +11,7 @@ export Train, Valid, Test
 export Image, Tabular, GrayImage, ColorImage, Regression, Classification
 
 export split_traintest, split_trainvalidtest
-export load, df_to_array
+export load, df_to_array, getheader
 export normalize!, meanstd, minmax, l2norm
 export binarize, classes
 
