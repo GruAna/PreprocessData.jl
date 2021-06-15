@@ -36,7 +36,7 @@ Loads dataset of given type.
 
 - `type::Type{<:Split}=Train`: other possible type is `Valid` or `Test`.
 """
-load(dataset::Image{<:ImageType}, type::Type{<:Split}=Train) = getdata(dataset, type)
+load(dataset::DatasetName, type::Type{<:Split}=Train) = getdata(dataset, type)
 
 """
     getdata(dataset::DatasetName, type::Type{<:Split})

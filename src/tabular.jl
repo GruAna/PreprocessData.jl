@@ -62,9 +62,7 @@ function load(
     toarray::Bool=false,
     header::Bool=false,
     )
-    df = getdata(dataset, type)
-
-    return postprocess(dataset, df, toarray, header)
+    return postprocess(dataset, getdata(dataset, type), toarray, header)
 end
 
 """
