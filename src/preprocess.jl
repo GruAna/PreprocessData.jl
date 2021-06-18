@@ -39,7 +39,7 @@ function preprocess(
         transpose = transposed(dataset),
         missingstrings = ["", "NA", "?", "*", "#DIV/0!", "missing", "NaN"],
         truestrings = ["T", "t", "TRUE", "true", "y", "yes", "Y"],
-        falsestrings = ["F", "f", "FALSE", "false", "n", "no", "N"],
+        falsestrings = ["F", "f", "FALSE", "false", "n", "no", "N"];
         kwargs...
         ) |> DataFrame
 
@@ -56,8 +56,7 @@ function preprocess(
     # place target column
     col = target(dataset)    #target column, either Int or Type{File}
 
-    name = getfilename(path)
-    typeSplit = find_in(name)
+    typeSplit = find_in(basename(path))
 
     df = place_target(col, df, typeSplit)
 
