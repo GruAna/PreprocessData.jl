@@ -150,6 +150,9 @@ second the rest (together 100%).
 - `seed::Int`: random seed for shuffling indeces
 """
 function shuffle_indeces(n::Int,size::Float64,seed::Int)
+    if size < 0 || size > 1
+        error("size for split is not within the range [0,1]")
+    end
     selection = round(Int, size*n)                  #count of rows of train data
     Random.seed!(seed)
     indeces = randperm(n)                           #randomly sorted indeces (numbers 1:n)

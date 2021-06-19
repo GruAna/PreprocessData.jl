@@ -254,7 +254,7 @@ end
 function change!(data::AbstractDataFrame, devided)
     selected = _select(data, selectnumeric(data))
     n = length(devided)
-    _sele
+
     for i in 1:n
         selected[:,i] .= selected[:,i] ./ devided[i]
     end
