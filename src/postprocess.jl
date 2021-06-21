@@ -81,6 +81,10 @@ function normalize!(type::Type{L2}, data; kwargs...)
     return
 end
 
+function normalize!(data; kwargs...)
+    error("Type of normalization not specified, try Std, MinMax or L2.")
+end
+
 # ------------------ Util functions for normalizing tabular datasets ------------------- */
 """
     _select(data, selection)
@@ -121,6 +125,8 @@ If `data` is an `AbstractArray`, `dims` specifies whether it is over columns or 
 """
 function minmax(data::AbstractArray; dims::Int=1)
     selected = _select(data, selectnumeric(data))
+    display(selected)
+
     minimum(selected; dims=dims), maximum(selected; dims=dims)
 end
 
@@ -187,7 +193,7 @@ function selectnumeric(data::AbstractArray; dims::Int=1)
         n = Base.size(data, 2)
 
         for i in 1:n
-            if eltype(data[:,i]) <: Number
+            if eltype(data[1,i]) <: Number && eltype(data[2,i]) <: Number
                 append!(nums, i)
             end
         end
@@ -198,7 +204,7 @@ function selectnumeric(data::AbstractArray; dims::Int=1)
         n = Base.size(data, 1)
 
         for i in 1:n
-            if eltype(data[i,:]) <: Number
+            if eltype(data[i,1]) <: Number && eltype(data[i,1]) <: Number
                 append!(nums, i)
             end
         end
@@ -234,7 +240,8 @@ function change!(data::AbstractDataFrame, substracted, devided)
     n = length(devided)
 
     for i in 1:n
-        selected[:,i] .= (selected[:,i] .- substracted[i]) ./ devided[i]
+        # selected[!,i] = convert.(Float64,selected[:,i])
+        selected[:,i] .= ((selected[:,i] .- substracted[i]) ./ devided[i])
     end
 
     return
@@ -256,6 +263,7 @@ function change!(data::AbstractDataFrame, devided)
     n = length(devided)
 
     for i in 1:n
+    #    selected[!,i] = convert.(Float64,selected[:,i])
         selected[:,i] .= selected[:,i] ./ devided[i]
     end
 
