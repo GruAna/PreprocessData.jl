@@ -1,5 +1,7 @@
 module PreprocessData
 
+using Base: func_for_method_checked
+using MLDatasets: datadir
 using DataDeps, DataFrames, CSV, InteractiveUtils, Random
 using MLDatasets
 using InteractiveUtils: subtypes
@@ -15,7 +17,7 @@ export load, df_to_array, getheader
 export normalize!, meanstd, minmax, l2norm
 export binarize, classes
 
-export listdatasets, info, remove
+export listdatasets, info, remove, isdownloaded
 
 const DATASET_DIR_TAB = joinpath(@__DIR__, "datasets/tabular")
 const DATASET_DIR_IMG = joinpath(@__DIR__, "datasets/image")

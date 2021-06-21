@@ -125,8 +125,6 @@ If `data` is an `AbstractArray`, `dims` specifies whether it is over columns or 
 """
 function minmax(data::AbstractArray; dims::Int=1)
     selected = _select(data, selectnumeric(data))
-    display(selected)
-
     minimum(selected; dims=dims), maximum(selected; dims=dims)
 end
 
@@ -184,7 +182,7 @@ end
     selectnumeric(data::AbstractArray; dims::Int=1)
 
 Returns tuple array of number of columns or rows which contain values of type `Number` and
-other element of the tuple is `Colon`.
+other element of the tuple is `Colon` :.
 """
 function selectnumeric(data::AbstractArray; dims::Int=1)
     nums = Int[]

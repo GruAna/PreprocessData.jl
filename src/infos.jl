@@ -55,7 +55,6 @@ function info(dataset::Tabular)
     printstyled("\n$dataset\n"; bold=true, color=:light_yellow)
     text = """
         Target column:  $(target(dataset))
-        Source:         $(url(dataset))
     """
     println(infotext(dataset),text)
 end
@@ -75,11 +74,19 @@ function infotext(dataset::DatasetName)
         Name:           $(name(dataset))
         Type:           $(nameof(supertype(typeof(dataset))))
         Downloaded:     $(isdownloaded(dataset) ? "Yes $(DataDeps.determine_save_path((name(dataset))))" : "No")
+        Source:         $(url(dataset))
         Size:           $(PreprocessData.size(dataset)[1]) (train data)
                         $(PreprocessData.size(dataset)[2]) (valid data)
                         $(PreprocessData.size(dataset)[3]) (test data)
         Problem type:   $(nameof(problem(dataset)))
     """
+    msg = message(dataset)
+    if !isempty(msg)
+        text = text*"""
+            Message:        $msg
+        """
+    end
+    return text
 end
 
 """

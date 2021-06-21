@@ -1,7 +1,16 @@
 function getModule(::Image{MLImage}) end
 name(dataset::Image{MLImage}) = String(nameof(typeof(dataset)))
-url(dataset::Image{MLImage}) = @info "URL address for $dataset can be found in MLDatasets.jl."
-checksum(dataset::Image{MLImage}) = @info "Checksum address for $dataset can be found in MLDatasets.jl."
+function url(dataset::Image{MLImage})
+    text = "URL address for $dataset can be found in MLDatasets.jl."
+    @info text
+    return text
+end
+function checksum(dataset::Image{MLImage})
+    text = "Checksum address for $dataset can be found in MLDatasets.jl."
+    @info text
+    return text
+end
+
 target(dataset::Image{MLImage}) = @info "Target for $dataset can be obtained by loading the whole data."
 
 # ---------------------------- Util functions for splitting ---------------------------- */
