@@ -4,5 +4,6 @@ checksum(::Abalone) = "de37cdcdcaaa50c309d514f248f7c2302a5f1f88c168905eba23fe2fb
 prep(::Abalone) = path -> preprocess(path, Abalone())
 target(::Abalone) = 9
 categorical(::Abalone) = 1
+headers(::Abalone) = ["Sex", "Length", "Diameter", "Height", "Whole weight", "Shucked weight", "Viscera weight", "Shell weight", "Rings"]
 size(::Abalone) = (4177, 0, 0)
 problem(::Abalone) = Regression

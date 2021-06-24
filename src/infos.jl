@@ -17,12 +17,13 @@ end
 Prints names of tabular dataset that are of given type (Classification or Regression).
 """
 function printproblemtypes(P::Type)
-    datasets = subtypes(Tabular)
+    datasets = [subtypes(Tabular); subtypes(GrayImage); subtypes(ColorImage)]
     printstyled(String(nameof(P))," datatsets\n", bold=true)
 
     for i in datasets
         if problem(i()) == P
-            printstyled(String(nameof(i)),"\n"; color=:light_yellow)
+            printstyled(String(nameof(i))," "; color=:light_yellow)
+            println("(",(nameof(supertype(typeof(i())))),")")
         end
     end
 end

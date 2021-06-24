@@ -234,12 +234,8 @@ function change!(data::AbstractArray, substracted, devided)
 end
 
 function change!(data::AbstractDataFrame, substracted, devided)
-    selected = _select(data, selectnumeric(data))
-    n = length(devided)
-
-    for i in 1:n
-        # selected[!,i] = convert.(Float64,selected[:,i])
-        selected[:,i] .= ((selected[:,i] .- substracted[i]) ./ devided[i])
+    for (i, col) in enumerate(selectnumeric(data))
+        data[!, col] = (data[:,col] .- substracted[i]) ./ devided[i]
     end
 
     return
@@ -257,12 +253,8 @@ function change!(data::AbstractArray, devided)
 end
 
 function change!(data::AbstractDataFrame, devided)
-    selected = _select(data, selectnumeric(data))
-    n = length(devided)
-
-    for i in 1:n
-    #    selected[!,i] = convert.(Float64,selected[:,i])
-        selected[:,i] .= selected[:,i] ./ devided[i]
+    for (i, col) in enumerate(selectnumeric(data))
+        data[!, col] = data[:,col] ./ devided[i]
     end
 
     return
@@ -274,7 +266,7 @@ end
 
 Prints unique names of target values.
 """
-classes(dataset::DatasetName) = unique(labels(dataset))
+classes(dataset::DatasetName) = sort(unique(labels(dataset)))
 
 """
     binarize(data, pos_labels)
