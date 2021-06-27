@@ -6,4 +6,4 @@ target(::Abalone) = 9
 categorical(::Abalone) = 1
 headers(::Abalone) = ["Sex", "Length", "Diameter", "Height", "Whole weight", "Shucked weight", "Viscera weight", "Shell weight", "Rings"]
 size(::Abalone) = (4177, 0, 0)
-problem(::Abalone) = Regression
+problem(::Abalone) = Classification
