@@ -12,21 +12,24 @@ function getfilename(path)
 end
 
 """
-    df_or_array(df::DataFrame, toarray::Bool)
+    df_or_array(df::DataFrame, toarray::Bool; cols::Int=1)
 
 Based on `toarray` return either a `DataFrame` (false) or an `Array` (true).
 """
-function df_or_array(df::DataFrame, toarray::Bool)
-    return toarray ? df_to_array(df) : df
+function df_or_array(df::DataFrame, toarray::Bool; cols::Int=1)
+    return toarray ? df_to_array(df, cols=cols) : df
 end
 
 """
-    df_to_array(df::DataFrame)
+    df_to_array(df::DataFrame; cols::Int=1)
 
 Converts `DataFrame` to `Array` (1:end-1 columns) and `Vector` (last column).
 """
-function df_to_array(df::DataFrame)
-    return Array(df[:,1:end-1]), df[:,end]
+function df_to_array(df::DataFrame; cols::Int=1)
+    if cols >= Base.size(df,2) || cols <= 0
+        error("cols has to be bigger than 1 and smaller than number of all columns of DataFrame.")
+    end
+        return Array(df[:,1:end-cols]), Array(df[:,end-cols+1:end])
 end
 
 """
