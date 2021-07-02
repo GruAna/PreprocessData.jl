@@ -101,14 +101,10 @@ Norm = [norm([1,2,3]); norm([5.4,6.3,7.2])]
 @test l2norm(array) == PreprocessData.makerow(Norm)
 
 # minmax
-min, max = ([minimum([1,2,3]); minimum([5.4,6.3,7.2])], [maximum([1,2,3]); maximum([5.4,6.3,7.2])] )
+min = [minimum([1,2,3]); minimum([5.4,6.3,7.2])]
+max = [maximum([1,2,3]); maximum([5.4,6.3,7.2])]
 @test PreprocessData.minmax(dfOrig) == (min, max)
 @test PreprocessData.minmax(array) == (PreprocessData.makerow(min),PreprocessData.makerow(max))
-
-# meanstd
-Mean, Std = ([mean([1,2,3]); mean([5.4,6.3,7.2])], [std([1,2,3]); std([5.4,6.3,7.2])] )
-@test PreprocessData.meanstd(dfOrig) == (Mean, Std)
-@test PreprocessData.meanstd(array) == (PreprocessData.makerow(Mean),PreprocessData.makerow(Std))
 
 # _select
 dfOrig = DataFrame(A=[1,2,3],B=["a","b","c"],C=[5.4,6.3,7.2],Target=[5,6,7])
